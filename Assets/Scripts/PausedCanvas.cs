@@ -67,5 +67,8 @@ public class PausedCanvas : MonoBehaviour{
 
     public void setIngameCanvasGO(GameObject g) {ingameCanvasGO = g;}
 
-    public void restart() {SceneManager.LoadScene(SceneManager.GetActiveScene().buildIndex);}
+    public void restart() {
+        Time.timeScale = 1f;
+        SceneManager.LoadScene(SceneManager.GetActiveScene().buildIndex);
+    }
 }
