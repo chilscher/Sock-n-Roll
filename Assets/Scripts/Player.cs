@@ -32,7 +32,6 @@ public class Player : MonoBehaviour{
     public bool onMenu = false;
 
     
-    private IngameCanvas ingameCanvas;
     private Vector3 walkingDirection;
     private Animator animator;
     private bool isWalking = false;
@@ -225,8 +224,6 @@ public class Player : MonoBehaviour{
         if (!isDead) {
             if (HP > 0) {
                 HP -= 1;
-                if (!onMenu) { ingameCanvas.loseHeart(); }
-
             }
             if (HP <= 0 && !isDying) {
                 animator.SetTrigger("dying");
@@ -284,8 +281,6 @@ public class Player : MonoBehaviour{
     public bool hasWonYet() { return hasWon; }
 
     public bool hasLostYet() {return hasLost;}
-
-    public void setIngameCanvas(IngameCanvas c) {ingameCanvas = c;}
 
     public void startReviving() {
         if (isDead) {
