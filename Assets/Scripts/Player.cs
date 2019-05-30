@@ -23,6 +23,9 @@ public class Player : MonoBehaviour{
     public float punchHitTime = 0.46f; //how far through the punch does the enemy get knocked down. 0 is at the start, 1 is at the end
     public float rollStartTime = 0.15f; //how far through the roll does the player start moving fast
 
+    [Header("Sound Action Times")]
+    public float punchSoundTime = 0.2f;
+
     [Header("Movement Speeds")]
     public float walkingSpeed = 3f;
     public float rollingSpeed = 5f;
@@ -31,7 +34,11 @@ public class Player : MonoBehaviour{
     public int startingHP = 3;
     public bool onMenu = false;
 
-    
+    [Header("Tutorials and Menus")]
+    public bool canRoll = true;
+    public bool canTakeDamage = true;
+
+
     private Vector3 walkingDirection;
     private Animator animator;
     private bool isWalking = false;
@@ -51,6 +58,7 @@ public class Player : MonoBehaviour{
     private float deathDuration;
     private int HP;
     private List<Enemy> enemiesInRange = new List<Enemy>();
+    private bool hasPunchSounded = false;
 
 
     void Start(){
@@ -62,10 +70,10 @@ public class Player : MonoBehaviour{
 
     
     void Update(){
-        countDownActionTime();
         setAction();
 
         animatePunch();
+        punchSound();
         hitEnemy();
 
         animateRoll();
@@ -79,6 +87,8 @@ public class Player : MonoBehaviour{
         checkForWin();
         die();
         revive();
+
+        countDownActionTime();
     }
 
     private void countDownActionTime() {
@@ -100,10 +110,13 @@ public class Player : MonoBehaviour{
                 isPunching = true;
                 actionTimeRemaining = punchDuration;
                 hasHitEnemy = false;
+                hasPunchSounded = false;
             }
             else if (Input.GetKeyDown(rollKey)) {
-                isRolling = true;
-                actionTimeRemaining = rollDuration;
+                if (canRoll) {
+                    isRolling = true;
+                    actionTimeRemaining = rollDuration;
+                }
             }
             else if (Input.GetKey(upKey) || Input.GetKey(downKey) || Input.GetKey(leftKey) || Input.GetKey(rightKey)) {
                 isWalking = true;
@@ -152,12 +165,25 @@ public class Player : MonoBehaviour{
             float timeIntoPunch = punchDuration - actionTimeRemaining;
             float whenDoesPunchHit = punchHitTime * punchDuration;
             bool punchHappenedYet = (timeIntoPunch >= whenDoesPunchHit);
-            if (punchHappenedYet && hasHitEnemy == false) {
+            if (punchHappenedYet && !hasHitEnemy) {
                 hasHitEnemy = true;
                 foreach (Enemy e in enemiesInRange){
                     e.hasBeenHit();
                 }
             }
+        }
+    }
+
+    private void punchSound() {
+        if (isPunching) {
+            float timeIntoPunch = punchDuration - actionTimeRemaining;
+            float whenDoesPunchSoundStart = punchSoundTime * punchDuration;
+            bool soundHappenedYet = (timeIntoPunch >= whenDoesPunchSoundStart);
+            if (soundHappenedYet && !hasPunchSounded) {
+                FindObjectOfType<AudioManager>().Play("Punch");
+                hasPunchSounded = true;
+            }
+
         }
     }
     
@@ -221,7 +247,7 @@ public class Player : MonoBehaviour{
     }
 
     public void hasBeenHit() {
-        if (!isDead) {
+        if (!isDead && canTakeDamage) {
             if (HP > 0) {
                 HP -= 1;
             }
@@ -232,6 +258,8 @@ public class Player : MonoBehaviour{
                 isPunching = false;
                 isDying = true;
                 actionTimeRemaining = deathDuration;
+                FindObjectOfType<AudioManager>().FadeOutAll();
+                FindObjectOfType<AudioManager>().Play("Player Death");
             }
         }
     }

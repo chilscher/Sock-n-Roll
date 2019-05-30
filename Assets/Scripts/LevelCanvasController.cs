@@ -26,12 +26,17 @@ public class LevelCanvasController : MonoBehaviour{
     [Header("Pause/Resume Key")]
     public KeyCode pauseKey = KeyCode.Escape;
 
+    [Header("Tutorials and Menus")]
+    public bool showHealth = true;
+
     private Player player;
     private List<GameObject> hearts;
     private string nextLevelName;
     private bool isPaused = false;
     private bool isPlaying = true;
     private bool doesNextLevelExist;
+    private bool onWinScreenYet = false;
+    private bool onLoseScreenYet = false;
 
 
     private GameObject nextLevelBtn;
@@ -47,17 +52,22 @@ public class LevelCanvasController : MonoBehaviour{
         winCanvas.SetActive(false);
         loseCanvas.SetActive(false);
 
-        drawAllHearts();
+        if (showHealth) { drawAllHearts(); }
+        
 
         getNextLevelName();
         doesNextLevelExist = Application.CanStreamedLevelBeLoaded(nextLevelName);
         hideNextLevelButton();
 
+
+        //FindObjectOfType<AudioManager>().Play("Level Theme");
+        FindObjectOfType<AudioManager>().FadeIn("Level Theme");
+
     }
 
     
     void Update(){
-        if (hearts.Count != player.getHP()) { redrawHearts(); }
+        if (showHealth && hearts.Count != player.getHP()) { redrawHearts(); }
 
         hitPauseKey();
         win();
@@ -116,24 +126,29 @@ public class LevelCanvasController : MonoBehaviour{
     }
 
     private void win() {
-        if (player.hasWonYet()) {
+        if (player.hasWonYet() && !onWinScreenYet) {
+            onWinScreenYet = true;
             isPaused = false;
             isPlaying = false;
             winCanvas.SetActive(true);
             ingameCanvas.SetActive(false);
             pausedCanvas.SetActive(false);
             loseCanvas.SetActive(false);
+            FindObjectOfType<AudioManager>().StopAll();
+            FindObjectOfType<AudioManager>().Play("Victory Jingle");
         }
     }
 
     private void lose() {
-        if (player.hasLostYet()) {
+        if (player.hasLostYet() && !onLoseScreenYet) {
+            onLoseScreenYet = true;
             isPaused = false;
             isPlaying = false;
             loseCanvas.SetActive(true);
             ingameCanvas.SetActive(false);
             pausedCanvas.SetActive(false);
             winCanvas.SetActive(false);
+            FindObjectOfType<AudioManager>().FadeIn("Defeat Jingle");
         }
     }
 
@@ -148,17 +163,22 @@ public class LevelCanvasController : MonoBehaviour{
     }
 
     private void quit() {
+        FindObjectOfType<AudioManager>().FadeOutAll();
         Time.timeScale = 1f;
         SceneManager.LoadScene("Main Menu");
     }
 
     private void restart() {
+        FindObjectOfType<AudioManager>().FadeOutAll();
         Time.timeScale = 1f;
         SceneManager.LoadScene(SceneManager.GetActiveScene().buildIndex);
     }
 
     public void nextLevel() {
-        if (doesNextLevelExist) { SceneManager.LoadScene(nextLevelName); }
+        if (doesNextLevelExist) {
+            FindObjectOfType<AudioManager>().FadeOutAll();
+            SceneManager.LoadScene(nextLevelName);
+        }
     }
 
     private void getNextLevelName() {
@@ -192,5 +212,7 @@ public class LevelCanvasController : MonoBehaviour{
     public void _btnQuit() { quit(); }
     public void _btnRestart() { restart(); }
     public void _btnNextLevel() { nextLevel(); }
+    
+    
 
 }

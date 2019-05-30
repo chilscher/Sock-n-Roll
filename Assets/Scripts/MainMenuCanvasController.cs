@@ -10,6 +10,9 @@ public class MainMenuCanvasController : MonoBehaviour {
     public GameObject creditsCanvas;
     public GameObject playCanvas;
 
+    [Header("Options")]
+    public bool canReviveEnemy = true;
+
     
     private GameObject homeRevPlayerBtn;
     private GameObject homeRevEnemyBtn;
@@ -33,15 +36,20 @@ public class MainMenuCanvasController : MonoBehaviour {
         homeCanvas.SetActive(true);
         playCanvas.SetActive(false);
         creditsCanvas.SetActive(false);
+
+
+        FindObjectOfType<AudioManager>().Play("Main Menu");
     }
 
     private void Update() {
+        if (canReviveEnemy) {
+            homeRevEnemyBtn.SetActive(enemy.getIsDead());
+            playRevEnemyBtn.SetActive(enemy.getIsDead());
+            creditsRevEnemyBtn.SetActive(enemy.getIsDead());
+        }
         homeRevPlayerBtn.SetActive(player.getIsDead());
-        homeRevEnemyBtn.SetActive(enemy.getIsDead());
         playRevPlayerBtn.SetActive(player.getIsDead());
-        playRevEnemyBtn.SetActive(enemy.getIsDead());
         creditsRevPlayerBtn.SetActive(player.getIsDead());
-        creditsRevEnemyBtn.SetActive(enemy.getIsDead());
     }
 
     public void _btnMainMenu() {
@@ -74,5 +82,8 @@ public class MainMenuCanvasController : MonoBehaviour {
         enemy.startReviving();
     }
 
-    public void _btnLoadLevel(int x) { SceneManager.LoadScene("Level " + x.ToString());}
+    public void _btnLoadLevel(int x) {
+        FindObjectOfType<AudioManager>().FadeOutAll();
+        SceneManager.LoadScene("Level " + x.ToString());
+    }
 }

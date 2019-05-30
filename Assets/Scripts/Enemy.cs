@@ -20,6 +20,9 @@ public class Enemy : MonoBehaviour{
     [Header("Bullet Prefab")]
     public Bullet bulletPrefab;
 
+    [Header("Tutorials and Menus")]
+    public bool canShoot = true;
+
 
 
 
@@ -125,7 +128,7 @@ public class Enemy : MonoBehaviour{
     }
 
     private void shoot() {
-        if (isIdle && timeLeftUntilShoot == 0) {
+        if (canShoot && isIdle && timeLeftUntilShoot == 0) {
             isShooting = true;
             isIdle = false;
             isDying = false;
@@ -188,6 +191,8 @@ public class Enemy : MonoBehaviour{
             isIdle = false;
             isShooting = false;
             actionTimeRemaining = deathDuration;
+
+            FindObjectOfType<AudioManager>().Play("Enemy Death");
         }
     }
 
