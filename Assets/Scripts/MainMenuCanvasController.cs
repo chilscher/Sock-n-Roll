@@ -13,7 +13,10 @@ public class MainMenuCanvasController : MonoBehaviour {
     [Header("Options")]
     public bool canReviveEnemy = true;
 
-    
+    [Header("Back Key")]
+    public KeyCode backKey = KeyCode.Escape;
+
+
     private GameObject homeRevPlayerBtn;
     private GameObject homeRevEnemyBtn;
     private GameObject playRevPlayerBtn;
@@ -39,10 +42,11 @@ public class MainMenuCanvasController : MonoBehaviour {
         playCanvas.SetActive(false);
         creditsCanvas.SetActive(false);
 
-        audioManager.play("Main Menu");
+        audioManager.fadeIn("Main Menu");
     }
 
     private void Update() {
+        hitBackKey();
         if (canReviveEnemy) {
             homeRevEnemyBtn.SetActive(enemy.getIsDead());
             playRevEnemyBtn.SetActive(enemy.getIsDead());
@@ -86,5 +90,15 @@ public class MainMenuCanvasController : MonoBehaviour {
     public void _btnLoadLevel(int x) {
         audioManager.fadeOutAll();
         SceneManager.LoadScene("Level " + x.ToString());
+    }
+
+    private void hitBackKey() {
+        if (Input.GetKeyDown(backKey)) {
+            if (homeCanvas.activeSelf == false) {
+                homeCanvas.SetActive(true);
+                playCanvas.SetActive(false);
+                creditsCanvas.SetActive(false);
+            }
+        }
     }
 }

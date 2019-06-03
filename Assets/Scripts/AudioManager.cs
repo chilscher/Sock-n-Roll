@@ -70,8 +70,10 @@ public class AudioManager : MonoBehaviour {
     }
     
     public void fadeOut(Sound s) {
-        fadingOutSounds.Add(s);
-        s.fadeTimeLeft = globalFadeTime;
+        if (!fadingOutSounds.Contains(s)) {
+            fadingOutSounds.Add(s);
+            s.fadeTimeLeft = globalFadeTime;
+        }
     }
 
     private void countDownFadeOutSounds() {
@@ -104,6 +106,7 @@ public class AudioManager : MonoBehaviour {
 
     public void fadeIn(string name) {
         Sound s = getSound(name);
+        if (fadingOutSounds.Contains(s)) {fadingOutSounds.Remove(s);}
         fadingInSounds.Add(s);
         s.fadeTimeLeft = globalFadeTime;
         s.source.volume = 0;

@@ -23,8 +23,9 @@ public class Player : MonoBehaviour{
     public float punchHitTime = 0.46f; //how far through the punch does the enemy get knocked down. 0 is at the start, 1 is at the end
     public float rollStartTime = 0.15f; //how far through the roll does the player start moving fast
 
-    [Header("Sound Action Times")]
+    [Header("Sound Action Times")] //the % of the way through the action that the related audio starts
     public float punchSoundTime = 0.2f;
+    public float rollSoundTime = 0.1f;
 
     [Header("Movement Speeds")]
     public float walkingSpeed = 3f;
@@ -59,6 +60,7 @@ public class Player : MonoBehaviour{
     private int HP;
     private List<Enemy> enemiesInRange = new List<Enemy>();
     private bool hasPunchSounded = false;
+    private bool hasRollSounded = false;
     private AudioManager audioManager;
 
 
@@ -79,6 +81,7 @@ public class Player : MonoBehaviour{
         hitEnemy();
 
         animateRoll();
+        rollSound();
         roll();
 
         setWalkingDirection();
@@ -118,6 +121,7 @@ public class Player : MonoBehaviour{
                 if (canRoll) {
                     isRolling = true;
                     actionTimeRemaining = rollDuration;
+                    hasRollSounded = false;
                 }
             }
             else if (Input.GetKey(upKey) || Input.GetKey(downKey) || Input.GetKey(leftKey) || Input.GetKey(rightKey)) {
@@ -153,7 +157,19 @@ public class Player : MonoBehaviour{
     }
 
     private void walk() {
-        if (isWalking) {GetComponent<Rigidbody>().position += (walkingDirection * walkingSpeed * Time.deltaTime);}
+        if (isWalking) {
+            GetComponent<Rigidbody>().position += (walkingDirection * walkingSpeed * Time.deltaTime);
+            /*
+            if (!audioManager.isPlaying("Walking")) {
+                audioManager.play("Walking");
+            }
+        }
+        else {
+            if (audioManager.isPlaying("Walking")) {
+                audioManager.stop("Walking");
+            }
+            */
+        }
     }
 
     private void animateWalk() {
@@ -186,6 +202,18 @@ public class Player : MonoBehaviour{
                 hasPunchSounded = true;
             }
 
+        }
+    }
+
+    private void rollSound() {
+        if (isRolling) {
+            float timeIntoRoll = rollDuration - actionTimeRemaining;
+            float whenDoesRollSoundStart = rollSoundTime * rollDuration;
+            bool soundHappenedYet = (timeIntoRoll >= whenDoesRollSoundStart);
+            if (soundHappenedYet && !hasRollSounded) {
+                audioManager.play("Roll");
+                hasRollSounded = true;
+            }
         }
     }
     
