@@ -14,9 +14,12 @@ using UnityEngine;
 public class AudioManager : MonoBehaviour {
     public float globalVolumeMultiplier = 1f;
     public float globalFadeTime = 1.5f;
+    [Range(0f, 100f)]
+    public float reducedSoundPercent = 50;
     public Sound[] sounds;
     private List<Sound> fadingOutSounds = new List<Sound>();
     private List<Sound> fadingInSounds = new List<Sound>();
+    private List<Sound> pausedSounds = new List<Sound>();
 
     void Awake() {
         DontDestroyOnLoad(gameObject);
@@ -36,13 +39,13 @@ public class AudioManager : MonoBehaviour {
         countDownFadeInSounds();
     }
 
-    public void Play(string sound) {
-        Sound s = getSound(sound);
+    public void play(string name) {
+        Sound s = getSound(name);
         s.source.time = s.startDelay;
         s.source.Play();
     }
 
-    public void PlayConsecutively(string sound1, string sound2) {
+    public void playConsecutively(string sound1, string sound2) {
         //plays sound after delayedSound ends
         Sound s1 = getSound(sound1);
         Sound s2 = getSound(sound2);
@@ -53,12 +56,12 @@ public class AudioManager : MonoBehaviour {
          
     }
 
-    public void Stop(string sound) {
-        Sound s = getSound(sound);
+    public void stop(string name) {
+        Sound s = getSound(name);
         s.source.Stop();
     }
 
-    public void StopAll() {
+    public void stopAll() {
         foreach (Sound s in sounds) {
             if (s.source.isPlaying) {
                 s.source.Stop();
@@ -66,21 +69,24 @@ public class AudioManager : MonoBehaviour {
         }
     }
     
-    public void FadeOut(Sound s) {
+    public void fadeOut(Sound s) {
         fadingOutSounds.Add(s);
         s.fadeTimeLeft = globalFadeTime;
     }
 
     private void countDownFadeOutSounds() {
+        //sounds that are fading out have their volumes scaled down
         List<Sound> toRemove = new List<Sound>();
         foreach (Sound s in fadingOutSounds) {
             s.source.volume = s.volume * s.fadeTimeLeft / globalFadeTime;
-            s.fadeTimeLeft -= Time.deltaTime;
+            if (s.fadeOutWithReducedSound) { s.source.volume *= (reducedSoundPercent / 100); }
+            s.fadeTimeLeft -= Time.unscaledDeltaTime; //scales volume down even if game is paused (time.deltaTime = 0 but unscaledDeltaTime is not 0)
             if (s.fadeTimeLeft < 0) { s.fadeTimeLeft = 0; }
             if (s.fadeTimeLeft == 0) {
                 s.source.Stop();
                 toRemove.Add(s);
                 s.source.volume = s.volume;
+                s.fadeOutWithReducedSound = false;
             }
         }
         foreach (Sound s in toRemove) {
@@ -88,16 +94,16 @@ public class AudioManager : MonoBehaviour {
         }
     }
 
-    public void FadeOutAll() {
+    public void fadeOutAll() {
         foreach (Sound s in sounds) {
             if (s.source.isPlaying) {
-                FadeOut(s);
+                fadeOut(s);
             }
         }
     }
 
-    public void FadeIn(string sound) {
-        Sound s = getSound(sound);
+    public void fadeIn(string name) {
+        Sound s = getSound(name);
         fadingInSounds.Add(s);
         s.fadeTimeLeft = globalFadeTime;
         s.source.volume = 0;
@@ -106,6 +112,7 @@ public class AudioManager : MonoBehaviour {
     }
 
     private Sound getSound(string name) {
+        //gets a Sound object from the sound's name
         Sound s = Array.Find(sounds, item => item.name == name);
         if (s == null) {
             Debug.LogWarning("Sound: " + name + " not found!");
@@ -115,10 +122,11 @@ public class AudioManager : MonoBehaviour {
     }
 
     private void countDownFadeInSounds() {
+        //sounds that are fading in have their volumes scaled up
         List<Sound> toRemove = new List<Sound>();
         foreach (Sound s in fadingInSounds) {
             s.source.volume = s.volume * (1 - (s.fadeTimeLeft / globalFadeTime));
-            s.fadeTimeLeft -= Time.deltaTime;
+            s.fadeTimeLeft -= Time.unscaledDeltaTime; //scales volume up even if game is paused (time.deltaTime = 0 but unscaledDeltaTime is not 0)
             if (s.fadeTimeLeft < 0) { s.fadeTimeLeft = 0; }
             if (s.fadeTimeLeft == 0) {
                 toRemove.Add(s);
@@ -128,5 +136,61 @@ public class AudioManager : MonoBehaviour {
         foreach (Sound s in toRemove) {
             fadingInSounds.Remove(s);
         }
+    }
+
+    public void pause() {
+        //pausable sounds are paused, and the global volume is reduced
+        AudioListener.volume = reducedSoundPercent / 100;
+        foreach (Sound s in sounds) {
+            if (s.source.isPlaying) {
+                if (s.pausable) {
+                    s.source.Pause();
+                    pausedSounds.Add(s);
+                }
+            }
+        }
+    }
+
+    public void resume() {
+        //pausable sounds are resumed, and the global volume is restored
+        AudioListener.volume = 1;
+        foreach (Sound s in pausedSounds) {
+            s.source.UnPause();
+        }
+        pausedSounds = new List<Sound>();
+    }
+
+    public void resumeWithMusicFadeout() {
+        //pausable sounds are resumed and the global volume is restored, then non-pausable sounds are faded out
+        List<Sound> playingMusic = new List<Sound>();
+        foreach (Sound s in sounds) {
+            if (!s.pausable && s.source.isPlaying) {
+                playingMusic.Add(s);
+            }
+        }
+        resume();
+        foreach (Sound s in playingMusic) {
+            //s.source.volume *= (reducedSoundPercent / 100);
+            s.fadeOutWithReducedSound = true;
+        }
+        fadeOutAll();
+
+    }
+
+    public bool isPlaying(string name) {
+        Sound s = getSound(name);
+        return s.source.isPlaying;
+    }
+
+    public void stopPausableSounds() {
+        //all pausable sounds are stopped
+        foreach (Sound s in sounds) {
+            if (s.source.isPlaying || pausedSounds.Contains(s)) {
+                if (s.pausable) {
+                    s.source.Stop();
+                }
+            }
+        }
+        pausedSounds = new List<Sound>();
     }
 }

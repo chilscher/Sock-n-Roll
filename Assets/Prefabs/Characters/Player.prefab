@@ -730,6 +730,7 @@ MonoBehaviour:
   deathSpeed: 1
   punchHitTime: 0.55
   rollStartTime: 0.15
+  punchSoundTime: 0.2
   walkingSpeed: 3
   rollingSpeed: 5
   startingHP: 3

@@ -40,9 +40,11 @@ public class Enemy : MonoBehaviour{
     private bool isDead = false;
     private bool isReviving = false;
     private bool hasFiredBullet = false; //if the enemy has fired a bullet during the current shot animation
-    
+    private AudioManager audioManager;
+
 
     void Start() {
+        audioManager = FindObjectOfType<AudioManager>();
         animator = GetComponent<Animator>();
         player = GameObject.Find("Player").GetComponent<Player>();
 
@@ -163,6 +165,7 @@ public class Enemy : MonoBehaviour{
                 Vector3 trajectory = new Vector3(dirToPlayer.x, 0, dirToPlayer.z).normalized;
                 bullet.setTrajectory(trajectory);
 
+                audioManager.play("Bullet Fired");
             }
         }
     }
@@ -192,7 +195,7 @@ public class Enemy : MonoBehaviour{
             isShooting = false;
             actionTimeRemaining = deathDuration;
 
-            FindObjectOfType<AudioManager>().Play("Enemy Death");
+            audioManager.play("Enemy Death");
         }
     }
 

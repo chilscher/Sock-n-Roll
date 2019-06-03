@@ -37,6 +37,7 @@ public class LevelCanvasController : MonoBehaviour{
     private bool doesNextLevelExist;
     private bool onWinScreenYet = false;
     private bool onLoseScreenYet = false;
+    private AudioManager audioManager;
 
 
     private GameObject nextLevelBtn;
@@ -44,6 +45,7 @@ public class LevelCanvasController : MonoBehaviour{
     void Start() {
         player = GameObject.FindWithTag("Player").GetComponent<Player>();
         nextLevelBtn = winCanvas.transform.Find("Next Level Button").gameObject;
+        audioManager = FindObjectOfType<AudioManager>();
 
         setAllLevelNumbers();
 
@@ -58,10 +60,11 @@ public class LevelCanvasController : MonoBehaviour{
         getNextLevelName();
         doesNextLevelExist = Application.CanStreamedLevelBeLoaded(nextLevelName);
         hideNextLevelButton();
-
-
-        //FindObjectOfType<AudioManager>().Play("Level Theme");
-        FindObjectOfType<AudioManager>().FadeIn("Level Theme");
+        
+        if (!audioManager.isPlaying("Level Theme")) {
+            audioManager.fadeIn("Level Theme");
+        }
+        
 
     }
 
@@ -116,6 +119,7 @@ public class LevelCanvasController : MonoBehaviour{
         ingameCanvas.SetActive(false);
         winCanvas.SetActive(false);
         loseCanvas.SetActive(false);
+        audioManager.pause();
     }
 
     private void hitPauseKey() {
@@ -134,8 +138,8 @@ public class LevelCanvasController : MonoBehaviour{
             ingameCanvas.SetActive(false);
             pausedCanvas.SetActive(false);
             loseCanvas.SetActive(false);
-            FindObjectOfType<AudioManager>().StopAll();
-            FindObjectOfType<AudioManager>().Play("Victory Jingle");
+            audioManager.stopAll();
+            audioManager.play("Victory Jingle");
         }
     }
 
@@ -148,7 +152,7 @@ public class LevelCanvasController : MonoBehaviour{
             ingameCanvas.SetActive(false);
             pausedCanvas.SetActive(false);
             winCanvas.SetActive(false);
-            FindObjectOfType<AudioManager>().FadeIn("Defeat Jingle");
+            audioManager.fadeIn("Defeat Jingle");
         }
     }
 
@@ -160,23 +164,27 @@ public class LevelCanvasController : MonoBehaviour{
         pausedCanvas.SetActive(false);
         winCanvas.SetActive(false);
         loseCanvas.SetActive(false);
+        audioManager.resume();
     }
 
     private void quit() {
-        FindObjectOfType<AudioManager>().FadeOutAll();
+        if (Time.timeScale == 0) { audioManager.resumeWithMusicFadeout(); } //if the game was paused, then fade out the music from its already quieter level
+        else { audioManager.fadeOutAll(); } //if the game was not paused, fade out the music like normal
         Time.timeScale = 1f;
         SceneManager.LoadScene("Main Menu");
     }
 
     private void restart() {
-        FindObjectOfType<AudioManager>().FadeOutAll();
+        audioManager.stopPausableSounds();
         Time.timeScale = 1f;
+        audioManager.resume();
         SceneManager.LoadScene(SceneManager.GetActiveScene().buildIndex);
     }
 
     public void nextLevel() {
         if (doesNextLevelExist) {
-            FindObjectOfType<AudioManager>().FadeOutAll();
+            audioManager.fadeOutAll();
+            audioManager.resume();
             SceneManager.LoadScene(nextLevelName);
         }
     }

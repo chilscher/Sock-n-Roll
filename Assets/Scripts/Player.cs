@@ -59,9 +59,11 @@ public class Player : MonoBehaviour{
     private int HP;
     private List<Enemy> enemiesInRange = new List<Enemy>();
     private bool hasPunchSounded = false;
+    private AudioManager audioManager;
 
 
-    void Start(){
+    void Start() {
+        audioManager = FindObjectOfType<AudioManager>();
         HP = startingHP;
         animator = GetComponent<Animator>();
         setAnimationSpeeds();
@@ -102,7 +104,7 @@ public class Player : MonoBehaviour{
         //determines which action the player is taking. Either walking, rolling, or punching
         //if the player is in the middle of an action, a new action is not checked
         //punching takes priority, then rolling, then walking
-        if (actionTimeRemaining == 0 && !isDying && !hasLost && !isDead) {
+        if (actionTimeRemaining == 0 && !isDying && !hasLost && !isDead && Time.timeScale > 0) {
             isWalking = false;
             isPunching = false;
             isRolling = false;
@@ -180,7 +182,7 @@ public class Player : MonoBehaviour{
             float whenDoesPunchSoundStart = punchSoundTime * punchDuration;
             bool soundHappenedYet = (timeIntoPunch >= whenDoesPunchSoundStart);
             if (soundHappenedYet && !hasPunchSounded) {
-                FindObjectOfType<AudioManager>().Play("Punch");
+                audioManager.play("Punch");
                 hasPunchSounded = true;
             }
 
@@ -247,9 +249,9 @@ public class Player : MonoBehaviour{
     }
 
     public void hasBeenHit() {
-        if (!isDead && canTakeDamage) {
+        if (!isDead) {
             if (HP > 0) {
-                HP -= 1;
+                if (canTakeDamage) { HP -= 1; }
             }
             if (HP <= 0 && !isDying) {
                 animator.SetTrigger("dying");
@@ -258,8 +260,11 @@ public class Player : MonoBehaviour{
                 isPunching = false;
                 isDying = true;
                 actionTimeRemaining = deathDuration;
-                FindObjectOfType<AudioManager>().FadeOutAll();
-                FindObjectOfType<AudioManager>().Play("Player Death");
+                audioManager.fadeOutAll();
+                audioManager.play("Player Death");
+            }
+            if (HP > 0){
+                audioManager.play("Player Gets Hit");
             }
         }
     }

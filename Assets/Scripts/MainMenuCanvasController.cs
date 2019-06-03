@@ -23,10 +23,12 @@ public class MainMenuCanvasController : MonoBehaviour {
 
     private Player player;
     private Enemy enemy;
+    private AudioManager audioManager;
 
     private void Start() {
         player = GameObject.Find("Player").GetComponent<Player>();
         enemy = GameObject.Find("Enemy").GetComponent<Enemy>();
+        audioManager = FindObjectOfType<AudioManager>();
         homeRevPlayerBtn = homeCanvas.transform.Find("Revive Player Button").gameObject;
         homeRevEnemyBtn = homeCanvas.transform.Find("Revive Enemy Button").gameObject;
         playRevPlayerBtn = playCanvas.transform.Find("Revive Player Button").gameObject;
@@ -37,8 +39,7 @@ public class MainMenuCanvasController : MonoBehaviour {
         playCanvas.SetActive(false);
         creditsCanvas.SetActive(false);
 
-
-        FindObjectOfType<AudioManager>().Play("Main Menu");
+        audioManager.play("Main Menu");
     }
 
     private void Update() {
@@ -83,7 +84,7 @@ public class MainMenuCanvasController : MonoBehaviour {
     }
 
     public void _btnLoadLevel(int x) {
-        FindObjectOfType<AudioManager>().FadeOutAll();
+        audioManager.fadeOutAll();
         SceneManager.LoadScene("Level " + x.ToString());
     }
 }

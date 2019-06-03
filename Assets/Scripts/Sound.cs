@@ -9,21 +9,19 @@ using UnityEngine;
 public class Sound {
 
     public string name;
-
     public AudioClip clip;
-
     [Range(0f, 1f)]
     public float volume = .75f;
-
     [Range(.1f, 3f)]
     public float pitch = 1f;
-
     public float startDelay = 0f;
-
     public bool loop = false;
+    public bool pausable = false;
 
     [HideInInspector]
     public AudioSource source;
     [HideInInspector]
     public float fadeTimeLeft = 0f;
+    [HideInInspector]
+    public bool fadeOutWithReducedSound = false;
 }
