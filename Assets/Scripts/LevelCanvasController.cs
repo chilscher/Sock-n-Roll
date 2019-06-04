@@ -191,11 +191,12 @@ public class LevelCanvasController : MonoBehaviour{
 
     private void getNextLevelName() {
         string name = SceneManager.GetActiveScene().name;
-
-        string num = name.Substring(name.Length - 1);
-        int n = int.Parse(num);
-        n++;
-        nextLevelName = name.Substring(0, name.Length - 1) + n.ToString();
+        string[] words = name.Split(' ');
+        string num = words[words.Length - 1];
+        int n = int.Parse(num) + 1;
+        words[words.Length - 1] = n.ToString();
+        string newName = string.Join(" ", words);
+        nextLevelName = newName;
     }
 
     private void hideNextLevelButton() {
