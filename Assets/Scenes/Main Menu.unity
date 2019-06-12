@@ -9650,11 +9650,6 @@ PrefabInstance:
       objectReference: {fileID: 0}
     - target: {fileID: 1037717697138332265, guid: 0a25ad87f6cd98d49a92b484891bca54,
         type: 3}
-      propertyPath: idleSpeed
-      value: 1.5
-      objectReference: {fileID: 0}
-    - target: {fileID: 1037717697138332265, guid: 0a25ad87f6cd98d49a92b484891bca54,
-        type: 3}
       propertyPath: startingHP
       value: 5
       objectReference: {fileID: 0}

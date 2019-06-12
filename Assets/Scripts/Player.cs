@@ -12,7 +12,7 @@ public class Player : MonoBehaviour{
     public KeyCode punchKey = KeyCode.X;
     public KeyCode rollKey = KeyCode.Z;
 
-    [Header("Animation Speeds")]
+    [Header("Animation Speeds")]//multiplier for how fast the animation gets played
     public float idleSpeed = 1f;
     public float walkSpeed = 1f;
     public float punchSpeed = 1f;
@@ -62,6 +62,7 @@ public class Player : MonoBehaviour{
     private bool hasPunchSounded = false;
     private bool hasRollSounded = false;
     private AudioManager audioManager;
+    private bool pauseBetweenActions = false;
 
 
     void Start() {
@@ -97,9 +98,14 @@ public class Player : MonoBehaviour{
     }
 
     private void countDownActionTime() {
+        float a = actionTimeRemaining;
         actionTimeRemaining -= Time.deltaTime;
+
         if (actionTimeRemaining < 0) {
             actionTimeRemaining = 0f;
+        }
+        if (a > 0 && actionTimeRemaining == 0) {
+            pauseBetweenActions = true;
         }
     }
 
@@ -111,13 +117,13 @@ public class Player : MonoBehaviour{
             isWalking = false;
             isPunching = false;
             isRolling = false;
-            if (Input.GetKeyDown(punchKey)) {
+            if (Input.GetKeyDown(punchKey) && !pauseBetweenActions) {
                 isPunching = true;
                 actionTimeRemaining = punchDuration;
                 hasHitEnemy = false;
                 hasPunchSounded = false;
             }
-            else if (Input.GetKeyDown(rollKey)) {
+            else if (Input.GetKeyDown(rollKey) && !pauseBetweenActions) {
                 if (canRoll) {
                     isRolling = true;
                     actionTimeRemaining = rollDuration;
@@ -126,6 +132,9 @@ public class Player : MonoBehaviour{
             }
             else if (Input.GetKey(upKey) || Input.GetKey(downKey) || Input.GetKey(leftKey) || Input.GetKey(rightKey)) {
                 isWalking = true;
+            }
+            if (pauseBetweenActions) {
+                pauseBetweenActions = false;
             }
         }
     }
@@ -159,16 +168,6 @@ public class Player : MonoBehaviour{
     private void walk() {
         if (isWalking) {
             GetComponent<Rigidbody>().position += (walkingDirection * walkingSpeed * Time.deltaTime);
-            /*
-            if (!audioManager.isPlaying("Walking")) {
-                audioManager.play("Walking");
-            }
-        }
-        else {
-            if (audioManager.isPlaying("Walking")) {
-                audioManager.stop("Walking");
-            }
-            */
         }
     }
 
@@ -219,12 +218,13 @@ public class Player : MonoBehaviour{
     
     private void animatePunch() {
         if (isPunching) { animator.SetBool("punching", true); }
-        else { animator.SetBool("punching", false); }
+        else { animator.SetBool("punching", false);}
     }
 
     private void animateRoll() {
+        //if (isRolling) { animator.SetTrigger("roll"); }
         if (isRolling) { animator.SetBool("rolling", true); }
-        else { animator.SetBool("rolling", false); }
+        else { animator.SetBool("rolling", false);}
     }
 
     private void getAnimationTimes() {

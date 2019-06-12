@@ -723,14 +723,15 @@ MonoBehaviour:
   rightKey: 275
   punchKey: 120
   rollKey: 122
-  idleSpeed: 2
+  idleSpeed: 1.5
   walkSpeed: 3
-  punchSpeed: 3
-  rollSpeed: 3
+  punchSpeed: 5
+  rollSpeed: 5
   deathSpeed: 1
   punchHitTime: 0.55
   rollStartTime: 0.15
   punchSoundTime: 0.2
+  rollSoundTime: 0.1
   walkingSpeed: 3
   rollingSpeed: 5
   startingHP: 3
@@ -747,10 +748,10 @@ CapsuleCollider:
   m_Material: {fileID: 0}
   m_IsTrigger: 1
   m_Enabled: 1
-  m_Radius: 0.02222073
-  m_Height: 0.06855257
+  m_Radius: 0.018954238
+  m_Height: 0.037908476
   m_Direction: 0
-  m_Center: {x: 0.002857107, y: 0.042194366, z: 0.016935179}
+  m_Center: {x: 0.007852829, y: 0.042194366, z: 0.015354623}
 --- !u!1 &1037717697047732727
 GameObject:
   m_ObjectHideFlags: 0
