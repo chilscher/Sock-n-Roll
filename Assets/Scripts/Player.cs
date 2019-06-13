@@ -62,7 +62,6 @@ public class Player : MonoBehaviour{
     private bool hasPunchSounded = false;
     private bool hasRollSounded = false;
     private AudioManager audioManager;
-    private bool pauseBetweenActions = false;
 
 
     void Start() {
@@ -75,6 +74,7 @@ public class Player : MonoBehaviour{
 
     
     void Update(){
+        //countDownActionTime();
         setAction();
 
         animatePunch();
@@ -100,13 +100,9 @@ public class Player : MonoBehaviour{
     private void countDownActionTime() {
         float a = actionTimeRemaining;
         actionTimeRemaining -= Time.deltaTime;
-
         if (actionTimeRemaining < 0) {
             actionTimeRemaining = 0f;
-        }
-        if (a > 0 && actionTimeRemaining == 0) {
-            pauseBetweenActions = true;
-        }
+        }        
     }
 
     private void setAction() {
@@ -114,27 +110,34 @@ public class Player : MonoBehaviour{
         //if the player is in the middle of an action, a new action is not checked
         //punching takes priority, then rolling, then walking
         if (actionTimeRemaining == 0 && !isDying && !hasLost && !isDead && Time.timeScale > 0) {
-            isWalking = false;
-            isPunching = false;
-            isRolling = false;
-            if (Input.GetKeyDown(punchKey) && !pauseBetweenActions) {
+            if (Input.GetKeyDown(punchKey)) {
                 isPunching = true;
+                isWalking = false;
+                isRolling = false;
                 actionTimeRemaining = punchDuration;
                 hasHitEnemy = false;
                 hasPunchSounded = false;
             }
-            else if (Input.GetKeyDown(rollKey) && !pauseBetweenActions) {
+            //else if (Input.GetKeyDown(rollKey)) {
+            else if (Input.GetKey(rollKey)) { 
                 if (canRoll) {
+                    if (isRolling) {animator.SetTrigger("reroll");}
                     isRolling = true;
+                    isWalking = false;
+                    isPunching = false;
                     actionTimeRemaining = rollDuration;
                     hasRollSounded = false;
                 }
             }
             else if (Input.GetKey(upKey) || Input.GetKey(downKey) || Input.GetKey(leftKey) || Input.GetKey(rightKey)) {
                 isWalking = true;
+                isRolling = false;
+                isPunching = false;
             }
-            if (pauseBetweenActions) {
-                pauseBetweenActions = false;
+            else {
+                isRolling = false;
+                isWalking = false;
+                isPunching = false;
             }
         }
     }
@@ -222,7 +225,6 @@ public class Player : MonoBehaviour{
     }
 
     private void animateRoll() {
-        //if (isRolling) { animator.SetTrigger("roll"); }
         if (isRolling) { animator.SetBool("rolling", true); }
         else { animator.SetBool("rolling", false);}
     }
