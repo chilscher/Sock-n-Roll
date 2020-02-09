@@ -2,12 +2,13 @@
 using System.Collections.Generic;
 using UnityEngine;
 using UnityEngine.SceneManagement;
+using UnityEngine.UI;
 
 public class LevelCanvasController : MonoBehaviour{
 
     [Header("Heart Icon")]
     public GameObject heartPrefab;
-    public Vector2 heartPos;
+    //public Vector2 heartPos;
     public float gapBetweenHearts = 60f;
 
     [Header("Canvases")]
@@ -15,7 +16,12 @@ public class LevelCanvasController : MonoBehaviour{
     public GameObject pausedCanvas;
     public GameObject winCanvas;
     public GameObject loseCanvas;
-
+    /*
+    [Header("Controls")]
+    public GameObject joystick;
+    public GameObject punchButton;
+    public GameObject rollButton;
+    */
     
     private UnityEngine.UI.Text ingameLevelNumberTextBox;
     private UnityEngine.UI.Text pausedeLevelNumberTextBox;
@@ -42,12 +48,32 @@ public class LevelCanvasController : MonoBehaviour{
 
     private GameObject nextLevelBtn;
 
+
+    private GameObject joystick;
+    private GameObject punchButton;
+    private GameObject rollButton;
+    private GameObject pauseButton;
+    private GameObject levelNumberText;
+    private GameObject heartsPosition;
+
     void Start() {
         player = GameObject.FindWithTag("Player").GetComponent<Player>();
         nextLevelBtn = winCanvas.transform.Find("Next Level Button").gameObject;
         audioManager = FindObjectOfType<AudioManager>();
+        joystick = ingameCanvas.transform.Find("Fixed Joystick").gameObject;
+        punchButton = ingameCanvas.transform.Find("Punch Button").gameObject;
+        rollButton = ingameCanvas.transform.Find("Roll Button").gameObject;
+        pauseButton = ingameCanvas.transform.Find("Pause Button").gameObject;
+        levelNumberText = ingameCanvas.transform.Find("Level Number").gameObject;
+        heartsPosition = ingameCanvas.transform.Find("Hearts Position").gameObject;
+        //joystick.SetActive(StaticVariables.useJoystick);
+        flipControls();
+        if ((SceneManager.GetActiveScene().name == "Level 1") || (SceneManager.GetActiveScene().name == "Level 2")) {
+            rollButton.SetActive(false);
+        }
 
-        setAllLevelNumbers();
+        //setAllLevelNumbers();
+        setLevelNumber();
 
         ingameCanvas.SetActive(true);
         pausedCanvas.SetActive(false);
@@ -64,8 +90,8 @@ public class LevelCanvasController : MonoBehaviour{
         if (!audioManager.isPlaying("Level Theme")) {
             audioManager.fadeIn("Level Theme");
         }
-        
 
+        ingameCanvas.transform.Find("Hearts Position").gameObject.SetActive(false);
     }
 
     
@@ -75,17 +101,51 @@ public class LevelCanvasController : MonoBehaviour{
         hitPauseKey();
         win();
         lose();
+
+    }
+
+    private void flipControls() {
+        if (StaticVariables.joystickOnRight) {
+            Vector2 pos;
+            
+            pos = joystick.GetComponent<RectTransform>().anchoredPosition;
+            pos.x *= -1;
+            joystick.GetComponent<RectTransform>().anchoredPosition = pos;
+
+            pos = punchButton.GetComponent<RectTransform>().anchoredPosition;
+            pos.x *= -1;
+            punchButton.GetComponent<RectTransform>().anchoredPosition = pos;
+
+            pos = rollButton.GetComponent<RectTransform>().anchoredPosition;
+            pos.x *= -1;
+            rollButton.GetComponent<RectTransform>().anchoredPosition = pos;
+
+            pos = pauseButton.GetComponent<RectTransform>().anchoredPosition;
+            pos.x *= -1;
+            pauseButton.GetComponent<RectTransform>().anchoredPosition = pos;
+            
+            pos = levelNumberText.GetComponent<RectTransform>().anchoredPosition;
+            pos.x *= -1;
+            levelNumberText.GetComponent<RectTransform>().anchoredPosition = pos;
+            
+            pos = heartsPosition.GetComponent<RectTransform>().anchoredPosition;
+            pos.x *= -1;
+            heartsPosition.GetComponent<RectTransform>().anchoredPosition = pos;
+
+        }
     }
 
     private void drawHearts(GameObject canvas) {
         int heartAmount = player.getHP();
         hearts = new List<GameObject>();
+        Vector2 heartPos = heartsPosition.GetComponent<RectTransform>().anchoredPosition;
+        //print(heartPos);
         float firstX = heartPos.x;
         float firstY = heartPos.y;
         float firstZ = 0f;
 
         for (int i = 0; i<heartAmount; i++) {
-            float x = firstX + (gapBetweenHearts * i);
+            float x = firstX + ((gapBetweenHearts + heartPrefab.gameObject.transform.GetComponent<RectTransform>().rect.width) * (i - 1));
             float y = firstY;
             float z = firstZ;
 
@@ -94,6 +154,7 @@ public class LevelCanvasController : MonoBehaviour{
             h.transform.SetParent(canvas.transform);
             RectTransform rt = h.GetComponent<RectTransform>();
             rt.anchoredPosition = pos;
+            h.transform.localScale *= ingameCanvas.transform.localScale.x;
             hearts.Add(h);
         }
     }
@@ -116,10 +177,20 @@ public class LevelCanvasController : MonoBehaviour{
         isPlaying = false;
         Time.timeScale = 0f;
         pausedCanvas.SetActive(true);
-        ingameCanvas.SetActive(false);
+        //ingameCanvas.SetActive(false);
+
+        //rollButton.SetActive(false);
+        //punchButton.SetActive(false);
+        //joystick.SetActive(false);
+        pauseButton.SetActive(false);
+
+
         winCanvas.SetActive(false);
         loseCanvas.SetActive(false);
-        audioManager.pause();
+        if (StaticVariables.globalAudioScale > 0) {
+            audioManager.pause();
+        }
+        
     }
 
     private void hitPauseKey() {
@@ -128,6 +199,7 @@ public class LevelCanvasController : MonoBehaviour{
             else if (isPaused) { resume(); }
         }
     }
+    
 
     private void win() {
         if (player.hasWonYet() && !onWinScreenYet) {
@@ -135,11 +207,18 @@ public class LevelCanvasController : MonoBehaviour{
             isPaused = false;
             isPlaying = false;
             winCanvas.SetActive(true);
-            ingameCanvas.SetActive(false);
+            //ingameCanvas.SetActive(false);
+
+            //rollButton.SetActive(false);
+            //punchButton.SetActive(false);
+            //joystick.SetActive(false);
+            pauseButton.SetActive(false);
+
             pausedCanvas.SetActive(false);
             loseCanvas.SetActive(false);
             audioManager.stopAll();
             audioManager.play("Victory Jingle");
+            StaticVariables.usingJoystick = false;
         }
     }
 
@@ -149,7 +228,13 @@ public class LevelCanvasController : MonoBehaviour{
             isPaused = false;
             isPlaying = false;
             loseCanvas.SetActive(true);
-            ingameCanvas.SetActive(false);
+            //ingameCanvas.SetActive(false);
+
+            //rollButton.SetActive(false);
+            //punchButton.SetActive(false);
+            //joystick.SetActive(false);
+            pauseButton.SetActive(false);
+
             pausedCanvas.SetActive(false);
             winCanvas.SetActive(false);
             audioManager.fadeIn("Defeat Jingle");
@@ -160,16 +245,27 @@ public class LevelCanvasController : MonoBehaviour{
         isPaused = false;
         isPlaying = true;
         Time.timeScale = 1f;
-        ingameCanvas.SetActive(true);
+        //ingameCanvas.SetActive(true);
+
+        rollButton.SetActive(true);
+        punchButton.SetActive(true);
+        joystick.SetActive(true);
+        pauseButton.SetActive(true);
+
         pausedCanvas.SetActive(false);
         winCanvas.SetActive(false);
         loseCanvas.SetActive(false);
-        audioManager.resume();
+        if (StaticVariables.globalAudioScale > 0) {
+            audioManager.resume();
+        }
+        
     }
 
     private void quit() {
-        if (Time.timeScale == 0) { audioManager.resumeWithMusicFadeout(); } //if the game was paused, then fade out the music from its already quieter level
-        else { audioManager.fadeOutAll(); } //if the game was not paused, fade out the music like normal
+        if (StaticVariables.globalAudioScale > 0) {
+            if (Time.timeScale == 0) { audioManager.resumeWithMusicFadeout(); } //if the game was paused, then fade out the music from its already quieter level
+            else { audioManager.fadeOutAll(); } //if the game was not paused, fade out the music like normal
+        }
         Time.timeScale = 1f;
         SceneManager.LoadScene("Main Menu");
     }
@@ -177,14 +273,18 @@ public class LevelCanvasController : MonoBehaviour{
     private void restart() {
         audioManager.stopPausableSounds();
         Time.timeScale = 1f;
-        audioManager.resume();
+        if (StaticVariables.globalAudioScale > 0) {
+            audioManager.resume();
+        }
         SceneManager.LoadScene(SceneManager.GetActiveScene().buildIndex);
     }
 
     public void nextLevel() {
         if (doesNextLevelExist) {
-            audioManager.fadeOutAll();
-            audioManager.resume();
+            if (StaticVariables.globalAudioScale > 0) {
+                audioManager.fadeOutAll();
+                audioManager.resume();
+            }
             SceneManager.LoadScene(nextLevelName);
         }
     }
@@ -202,16 +302,23 @@ public class LevelCanvasController : MonoBehaviour{
     private void hideNextLevelButton() {
         if (!doesNextLevelExist) { nextLevelBtn.SetActive(false); }
     }
-
+    /*
     private void setAllLevelNumbers() {
         setLevelNumber(ingameCanvas);
         setLevelNumber(pausedCanvas);
         setLevelNumber(winCanvas);
         setLevelNumber(loseCanvas);
     }
-
+    */
+    /*
     private void setLevelNumber(GameObject canvas) {
-        UnityEngine.UI.Text tb = canvas.transform.Find("Level number").gameObject.GetComponent<UnityEngine.UI.Text>();
+        Text tb = canvas.transform.Find("Level Number").Find("Level number").GetComponent<Text>();
+        string name = SceneManager.GetActiveScene().name;
+        tb.text = name.ToUpper();
+    }
+    */
+    private void setLevelNumber() {
+        Text tb = levelNumberText.transform.Find("Level number").GetComponent<Text>();
         string name = SceneManager.GetActiveScene().name;
         tb.text = name.ToUpper();
     }

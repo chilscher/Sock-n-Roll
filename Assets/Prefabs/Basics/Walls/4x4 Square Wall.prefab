@@ -25,7 +25,7 @@ Transform:
   m_GameObject: {fileID: 143174458632486129}
   m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
   m_LocalPosition: {x: -0.5725212, y: 1.6907454, z: 0.8716317}
-  m_LocalScale: {x: 1, y: 1, z: 1}
+  m_LocalScale: {x: 0.8, y: 0.8, z: 0.8}
   m_Children:
   - {fileID: 2822735153522513454}
   - {fileID: 7146827982539530343}
@@ -39,11 +39,6 @@ PrefabInstance:
   m_Modification:
     m_TransformParent: {fileID: 1157039105419074302}
     m_Modifications:
-    - target: {fileID: 1826781892156986337, guid: ab8f2075165865443ace7f81ca49b10b,
-        type: 3}
-      propertyPath: m_Name
-      value: Corner Quad Wall (1)
-      objectReference: {fileID: 0}
     - target: {fileID: 1250173479268040217, guid: ab8f2075165865443ace7f81ca49b10b,
         type: 3}
       propertyPath: m_LocalPosition.x
@@ -99,6 +94,11 @@ PrefabInstance:
       propertyPath: m_LocalEulerAnglesHint.z
       value: 0
       objectReference: {fileID: 0}
+    - target: {fileID: 1826781892156986337, guid: ab8f2075165865443ace7f81ca49b10b,
+        type: 3}
+      propertyPath: m_Name
+      value: Corner Quad Wall (1)
+      objectReference: {fileID: 0}
     m_RemovedComponents: []
   m_SourcePrefab: {fileID: 100100000, guid: ab8f2075165865443ace7f81ca49b10b, type: 3}
 --- !u!4 &2822735153522513454 stripped
@@ -114,11 +114,6 @@ PrefabInstance:
   m_Modification:
     m_TransformParent: {fileID: 1157039105419074302}
     m_Modifications:
-    - target: {fileID: 1826781892156986337, guid: ab8f2075165865443ace7f81ca49b10b,
-        type: 3}
-      propertyPath: m_Name
-      value: Corner Quad Wall
-      objectReference: {fileID: 0}
     - target: {fileID: 1250173479268040217, guid: ab8f2075165865443ace7f81ca49b10b,
         type: 3}
       propertyPath: m_LocalPosition.x
@@ -173,6 +168,11 @@ PrefabInstance:
         type: 3}
       propertyPath: m_LocalEulerAnglesHint.z
       value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: 1826781892156986337, guid: ab8f2075165865443ace7f81ca49b10b,
+        type: 3}
+      propertyPath: m_Name
+      value: Corner Quad Wall
       objectReference: {fileID: 0}
     m_RemovedComponents: []
   m_SourcePrefab: {fileID: 100100000, guid: ab8f2075165865443ace7f81ca49b10b, type: 3}

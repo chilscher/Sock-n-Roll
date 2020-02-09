@@ -28,7 +28,7 @@ public class AudioManager : MonoBehaviour {
             s.source = gameObject.AddComponent<AudioSource>();
             s.source.clip = s.clip;
             s.source.loop = s.loop;
-            s.volume *= globalVolumeMultiplier;
+            s.volume *= globalVolumeMultiplier * StaticVariables.globalAudioScale;
             s.source.volume = s.volume;
             s.source.pitch = s.pitch;
         }
@@ -43,6 +43,7 @@ public class AudioManager : MonoBehaviour {
         Sound s = getSound(name);
         s.source.time = s.startDelay;
         s.source.Play();
+        //s.source.volume = s.source.volume * StaticVariables.globalAudioScale;
     }
 
     public void playConsecutively(string sound1, string sound2) {

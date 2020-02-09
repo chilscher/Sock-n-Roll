@@ -2,6 +2,7 @@
 using System.Collections.Generic;
 using UnityEngine;
 using UnityEngine.SceneManagement;
+using UnityEngine.UI;
 
 public class MainMenuCanvasController : MonoBehaviour {
 
@@ -9,6 +10,7 @@ public class MainMenuCanvasController : MonoBehaviour {
     public GameObject homeCanvas;
     public GameObject creditsCanvas;
     public GameObject playCanvas;
+    public GameObject settingsCanvas;
 
     [Header("Options")]
     public bool canReviveEnemy = true;
@@ -28,6 +30,8 @@ public class MainMenuCanvasController : MonoBehaviour {
     private Enemy enemy;
     private AudioManager audioManager;
 
+    //public bool isPressingButton = false;
+
     private void Start() {
         player = GameObject.Find("Player").GetComponent<Player>();
         enemy = GameObject.Find("Enemy").GetComponent<Enemy>();
@@ -38,11 +42,16 @@ public class MainMenuCanvasController : MonoBehaviour {
         playRevEnemyBtn = playCanvas.transform.Find("Revive Enemy Button").gameObject;
         creditsRevPlayerBtn = creditsCanvas.transform.Find("Revive Player Button").gameObject;
         creditsRevEnemyBtn = creditsCanvas.transform.Find("Revive Enemy Button").gameObject;
+        settingsCanvas.SetActive(false);
         homeCanvas.SetActive(true);
         playCanvas.SetActive(false);
         creditsCanvas.SetActive(false);
 
         audioManager.fadeIn("Main Menu");
+
+
+        //updateJoystickText();
+        updateFlipControlsText();
     }
 
     private void Update() {
@@ -55,21 +64,27 @@ public class MainMenuCanvasController : MonoBehaviour {
         homeRevPlayerBtn.SetActive(player.getIsDead());
         playRevPlayerBtn.SetActive(player.getIsDead());
         creditsRevPlayerBtn.SetActive(player.getIsDead());
+
+        //StaticVariables.isPressingButton = false;
     }
 
     public void _btnMainMenu() {
+        settingsCanvas.SetActive(false);
         homeCanvas.SetActive(true);
         playCanvas.SetActive(false);
         creditsCanvas.SetActive(false);
     }
 
     public void _btnLevelSelect() {
+        //StaticVariables.isPressingButton = true;
+        settingsCanvas.SetActive(false);
         playCanvas.SetActive(true);
         homeCanvas.SetActive(false);
         creditsCanvas.SetActive(false);
     }
 
     public void _btnCredits() {
+        settingsCanvas.SetActive(false);
         creditsCanvas.SetActive(true);
         homeCanvas.SetActive(false);
         playCanvas.SetActive(false);
@@ -101,4 +116,48 @@ public class MainMenuCanvasController : MonoBehaviour {
             }
         }
     }
+
+    public void _btnMute() {
+        if (StaticVariables.globalAudioScale == 0f) {
+            StaticVariables.globalAudioScale = 1f;
+        }
+        else {
+            StaticVariables.globalAudioScale = 0f;
+        }
+
+        audioManager.stopAll();
+        AudioListener.volume = StaticVariables.globalAudioScale;
+        audioManager.play("Main Menu");
+        
+    }
+
+    public void _btnSettings() {
+        settingsCanvas.SetActive(true);
+        creditsCanvas.SetActive(false);
+        homeCanvas.SetActive(false);
+        playCanvas.SetActive(false);
+    }
+    /*
+    public void _btnJoystickToggle() {
+        StaticVariables.useJoystick = !StaticVariables.useJoystick;
+        updateJoystickText();
+    }
+
+    private void updateJoystickText() {
+        string s = "DISABLED";
+        if (StaticVariables.useJoystick) { s = "ENABLED"; }
+        settingsCanvas.transform.Find("Toggle Joystick Button").Find("Text").gameObject.GetComponent<Text>().text = "TOGGLE JOYSTICK\nJOYSTICK " + s;
+    }
+    */
+   public void _btnFlipControls() {
+        StaticVariables.joystickOnRight = !StaticVariables.joystickOnRight;
+        updateFlipControlsText();
+    }
+
+    private void updateFlipControlsText() {
+        string s = "LEFT";
+        if (StaticVariables.joystickOnRight) { s = "RIGHT"; }
+        settingsCanvas.transform.Find("Flip Controls Button").Find("Text").gameObject.GetComponent<Text>().text = "FLIP CONTROLS\nJOYSTICK ON " + s;
+    }
+    
 }
