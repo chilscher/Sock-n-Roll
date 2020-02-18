@@ -9,9 +9,7 @@ public class ButtonPressDetection : MonoBehaviour, IPointerDownHandler, IPointer
 
     public void OnPointerDown(PointerEventData eventData) {
         this.isDown = true;
-        StaticVariables.isPressingButton = true;
         if (isPunchButton) {
-            //StaticVariables.pressingPunchButton = true;
             StaticVariables.justPressedPunchButton = true;
         }
         else if (isRollButton) {
@@ -21,9 +19,7 @@ public class ButtonPressDetection : MonoBehaviour, IPointerDownHandler, IPointer
 
     public void OnPointerUp(PointerEventData eventData) {
         this.isDown = false;
-        StaticVariables.isPressingButton = false;
         if (isPunchButton) {
-            //StaticVariables.pressingPunchButton = false;
             StaticVariables.justPressedPunchButton = false;
         }
         else if (isRollButton) {

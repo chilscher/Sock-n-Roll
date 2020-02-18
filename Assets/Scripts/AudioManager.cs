@@ -43,7 +43,6 @@ public class AudioManager : MonoBehaviour {
         Sound s = getSound(name);
         s.source.time = s.startDelay;
         s.source.Play();
-        //s.source.volume = s.source.volume * StaticVariables.globalAudioScale;
     }
 
     public void playConsecutively(string sound1, string sound2) {
@@ -174,7 +173,6 @@ public class AudioManager : MonoBehaviour {
         }
         resume();
         foreach (Sound s in playingMusic) {
-            //s.source.volume *= (reducedSoundPercent / 100);
             s.fadeOutWithReducedSound = true;
         }
         fadeOutAll();
@@ -196,5 +194,12 @@ public class AudioManager : MonoBehaviour {
             }
         }
         pausedSounds = new List<Sound>();
+    }
+
+    public void applyGlobalVolume() {
+        AudioListener.volume = StaticVariables.globalAudioScale;
+        if (AudioListener.volume == 0f) {
+            stopAll();
+        }
     }
 }

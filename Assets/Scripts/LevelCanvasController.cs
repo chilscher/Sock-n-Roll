@@ -3,12 +3,12 @@ using System.Collections.Generic;
 using UnityEngine;
 using UnityEngine.SceneManagement;
 using UnityEngine.UI;
+using System;
 
 public class LevelCanvasController : MonoBehaviour{
 
     [Header("Heart Icon")]
     public GameObject heartPrefab;
-    //public Vector2 heartPos;
     public float gapBetweenHearts = 60f;
 
     [Header("Canvases")]
@@ -16,12 +16,6 @@ public class LevelCanvasController : MonoBehaviour{
     public GameObject pausedCanvas;
     public GameObject winCanvas;
     public GameObject loseCanvas;
-    /*
-    [Header("Controls")]
-    public GameObject joystick;
-    public GameObject punchButton;
-    public GameObject rollButton;
-    */
     
     private UnityEngine.UI.Text ingameLevelNumberTextBox;
     private UnityEngine.UI.Text pausedeLevelNumberTextBox;
@@ -55,6 +49,7 @@ public class LevelCanvasController : MonoBehaviour{
     private GameObject pauseButton;
     private GameObject levelNumberText;
     private GameObject heartsPosition;
+    private int levelNumber;
 
     void Start() {
         player = GameObject.FindWithTag("Player").GetComponent<Player>();
@@ -66,13 +61,11 @@ public class LevelCanvasController : MonoBehaviour{
         pauseButton = ingameCanvas.transform.Find("Pause Button").gameObject;
         levelNumberText = ingameCanvas.transform.Find("Level Number").gameObject;
         heartsPosition = ingameCanvas.transform.Find("Hearts Position").gameObject;
-        //joystick.SetActive(StaticVariables.useJoystick);
         flipControls();
-        if ((SceneManager.GetActiveScene().name == "Level 1") || (SceneManager.GetActiveScene().name == "Level 2")) {
+        levelNumber = Int32.Parse(SceneManager.GetActiveScene().name.Split(' ')[1]);
+        if (levelNumber < 3) { 
             rollButton.SetActive(false);
         }
-
-        //setAllLevelNumbers();
         setLevelNumber();
 
         ingameCanvas.SetActive(true);
@@ -92,6 +85,7 @@ public class LevelCanvasController : MonoBehaviour{
         }
 
         ingameCanvas.transform.Find("Hearts Position").gameObject.SetActive(false);
+        updatePlayerColor();
     }
 
     
@@ -139,7 +133,6 @@ public class LevelCanvasController : MonoBehaviour{
         int heartAmount = player.getHP();
         hearts = new List<GameObject>();
         Vector2 heartPos = heartsPosition.GetComponent<RectTransform>().anchoredPosition;
-        //print(heartPos);
         float firstX = heartPos.x;
         float firstY = heartPos.y;
         float firstZ = 0f;
@@ -167,7 +160,6 @@ public class LevelCanvasController : MonoBehaviour{
 
     private void drawAllHearts() {
         drawHearts(ingameCanvas);
-        //drawHearts(pausedCanvas);
     }
     
 
@@ -177,14 +169,8 @@ public class LevelCanvasController : MonoBehaviour{
         isPlaying = false;
         Time.timeScale = 0f;
         pausedCanvas.SetActive(true);
-        //ingameCanvas.SetActive(false);
 
-        //rollButton.SetActive(false);
-        //punchButton.SetActive(false);
-        //joystick.SetActive(false);
         pauseButton.SetActive(false);
-
-
         winCanvas.SetActive(false);
         loseCanvas.SetActive(false);
         if (StaticVariables.globalAudioScale > 0) {
@@ -207,18 +193,32 @@ public class LevelCanvasController : MonoBehaviour{
             isPaused = false;
             isPlaying = false;
             winCanvas.SetActive(true);
-            //ingameCanvas.SetActive(false);
 
-            //rollButton.SetActive(false);
-            //punchButton.SetActive(false);
-            //joystick.SetActive(false);
             pauseButton.SetActive(false);
-
             pausedCanvas.SetActive(false);
             loseCanvas.SetActive(false);
             audioManager.stopAll();
             audioManager.play("Victory Jingle");
             StaticVariables.usingJoystick = false;
+            if (StaticVariables.levelsBeaten < levelNumber) {
+                StaticVariables.levelsBeaten = levelNumber;
+            }
+            if (player.HP == player.startingHP) {
+                //something happens here
+                //print(StaticVariables.levelsBeatenWithFullHP);
+                string[] levels = StaticVariables.levelsBeatenWithFullHP.Split(',');
+                bool hasBeatenBefore = false;
+                foreach (string level in levels) {
+                    if (level == (levelNumber + "")) {
+                        hasBeatenBefore = true;
+                    }
+                }
+                if (!hasBeatenBefore) {
+                    StaticVariables.levelsBeatenWithFullHP += "," + levelNumber;
+                }
+
+                //print(StaticVariables.levelsBeatenWithFullHP);
+            }
         }
     }
 
@@ -228,13 +228,8 @@ public class LevelCanvasController : MonoBehaviour{
             isPaused = false;
             isPlaying = false;
             loseCanvas.SetActive(true);
-            //ingameCanvas.SetActive(false);
 
-            //rollButton.SetActive(false);
-            //punchButton.SetActive(false);
-            //joystick.SetActive(false);
             pauseButton.SetActive(false);
-
             pausedCanvas.SetActive(false);
             winCanvas.SetActive(false);
             audioManager.fadeIn("Defeat Jingle");
@@ -245,9 +240,8 @@ public class LevelCanvasController : MonoBehaviour{
         isPaused = false;
         isPlaying = true;
         Time.timeScale = 1f;
-        //ingameCanvas.SetActive(true);
 
-        rollButton.SetActive(true);
+        if (levelNumber > 2) { rollButton.SetActive(true); }
         punchButton.SetActive(true);
         joystick.SetActive(true);
         pauseButton.SetActive(true);
@@ -302,24 +296,10 @@ public class LevelCanvasController : MonoBehaviour{
     private void hideNextLevelButton() {
         if (!doesNextLevelExist) { nextLevelBtn.SetActive(false); }
     }
-    /*
-    private void setAllLevelNumbers() {
-        setLevelNumber(ingameCanvas);
-        setLevelNumber(pausedCanvas);
-        setLevelNumber(winCanvas);
-        setLevelNumber(loseCanvas);
-    }
-    */
-    /*
-    private void setLevelNumber(GameObject canvas) {
-        Text tb = canvas.transform.Find("Level Number").Find("Level number").GetComponent<Text>();
-        string name = SceneManager.GetActiveScene().name;
-        tb.text = name.ToUpper();
-    }
-    */
+
     private void setLevelNumber() {
         Text tb = levelNumberText.transform.Find("Level number").GetComponent<Text>();
-        string name = SceneManager.GetActiveScene().name;
+        string name = "Level " + levelNumber;
         tb.text = name.ToUpper();
     }
 
@@ -328,7 +308,15 @@ public class LevelCanvasController : MonoBehaviour{
     public void _btnQuit() { quit(); }
     public void _btnRestart() { restart(); }
     public void _btnNextLevel() { nextLevel(); }
-    
-    
 
+
+    private void OnApplicationQuit() {
+        SaveSystem.SaveGame();
+    }
+
+    private void updatePlayerColor() {
+        if (StaticVariables.hasChangedColorYet) {
+            player.transform.Find("Model").GetComponent<Renderer>().sharedMaterial = StaticVariables.playerMat;
+        }
+    }
 }

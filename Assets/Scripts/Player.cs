@@ -57,13 +57,12 @@ public class Player : MonoBehaviour{
     private float punchDuration;
     private float rollDuration;
     private float deathDuration;
-    private int HP;
+    [HideInInspector]
+    public int HP;
     private List<Enemy> enemiesInRange = new List<Enemy>();
     private bool hasPunchSounded = false;
     private bool hasRollSounded = false;
     private AudioManager audioManager;
-
-    //private string tapState = "no tap";
 
     private GameObject ground;
 
@@ -82,9 +81,6 @@ public class Player : MonoBehaviour{
 
     
     void Update(){
-        //countDownActionTime();
-        //determineTapping();
-        //printMousePosition();
 
         setAction();
 
@@ -107,6 +103,8 @@ public class Player : MonoBehaviour{
 
         countDownActionTime();
 
+        checkIfOutOfBounds();
+
     }
 
     private void countDownActionTime() {
@@ -116,34 +114,12 @@ public class Player : MonoBehaviour{
             actionTimeRemaining = 0f;
         }        
     }
-    /*
-    private void determineTapping() {
-        if (tapState == "no tap") {
-            if (Input.GetKeyDown("mouse 0") && !StaticVariables.isPressingButton) {
-                    tapState = "tapping";
-            }
-        }
-        else if (tapState == "tapping") {
-            if (Input.GetKeyUp("mouse 0")) {
-                tapState = "no tap";
-            }
-        }
-        if (StaticVariables.useJoystick) {
-            tapState = "no tap";
-        }
-    }
-    */
 
     private void setAction() {
         //determines which action the player is taking. Either walking, rolling, or punching
         //if the player is in the middle of an action, a new action is not checked
         //punching takes priority, then rolling, then walking
-        if (StaticVariables.justPressedPunchButton && actionTimeRemaining > 0) {
-            StaticVariables.justPressedPunchButton = false;
-        }
-
         if (actionTimeRemaining == 0 && !isDying && !hasLost && !isDead && Time.timeScale > 0) {
-            //if (Input.GetKeyDown(punchKey) || StaticVariables.pressingPunchButton) {
             if (Input.GetKeyDown(punchKey) || StaticVariables.justPressedPunchButton) {
                 StaticVariables.justPressedPunchButton = false;
                 isPunching = true;
@@ -153,7 +129,6 @@ public class Player : MonoBehaviour{
                 hasHitEnemy = false;
                 hasPunchSounded = false;
             }
-            //else if (Input.GetKeyDown(rollKey)) {
             else if (Input.GetKey(rollKey) || StaticVariables.pressingRollButton) { 
                 if (canRoll) {
                     if (isRolling) {animator.SetTrigger("reroll");}
@@ -169,13 +144,6 @@ public class Player : MonoBehaviour{
                 isRolling = false;
                 isPunching = false;
             }
-            /*
-            else if (tapState == "tapping") {
-                isWalking = true;
-                isRolling = false;
-                isPunching = false;
-            }
-            */
             else if (StaticVariables.usingJoystick) {
                 isWalking = true;
                 isRolling = false;
@@ -201,18 +169,6 @@ public class Player : MonoBehaviour{
             if (Input.GetKey(downKey)) { walkDir += downDir; }
             if (Input.GetKey(leftKey)) { walkDir += leftDir; }
             if (Input.GetKey(rightKey)) { walkDir += rightDir; }
-            /*
-            if (tapState == "tapping") {
-                Plane plane = new Plane(Vector3.up, ground.transform.position);
-                var ray = Camera.main.ScreenPointToRay(Input.mousePosition);
-                float distance;
-                if (plane.Raycast(ray, out distance)) {
-                    var hitPoint = ray.GetPoint(distance);
-                    walkDir = hitPoint - transform.position;
-                }
-                
-            }
-            */
             if (StaticVariables.usingJoystick) {
                 walkDir = new Vector3(-StaticVariables.joystickDirection.y, 0, StaticVariables.joystickDirection.x);
             }
@@ -424,5 +380,20 @@ public class Player : MonoBehaviour{
     public int getHP() {return HP;}
 
     public bool getIsDead() { return isDead; }
-    
+    /*
+    public void OnCollisionEnter(Collision collision) {
+        print("collision");
+        if (collision.gameObject.name == "Bad Grass") {
+            print("on bad grass");
+
+        }
+    }
+    */
+
+    private void checkIfOutOfBounds() {
+        if ((transform.position.z < -6f) || (transform.position.z > 5.9f) || (transform.position.x < -72.7f) || (transform.position.x > -61.1f))  {
+            StaticVariables.hasBeenOutOfBounds = true;
+        }
+    }
+
 }
