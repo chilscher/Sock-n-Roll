@@ -119,40 +119,45 @@ public class Player : MonoBehaviour{
         //determines which action the player is taking. Either walking, rolling, or punching
         //if the player is in the middle of an action, a new action is not checked
         //punching takes priority, then rolling, then walking
-        if (actionTimeRemaining == 0 && !isDying && !hasLost && !isDead && Time.timeScale > 0) {
-            if (Input.GetKeyDown(punchKey) || StaticVariables.justPressedPunchButton) {
-                StaticVariables.justPressedPunchButton = false;
-                isPunching = true;
-                isWalking = false;
-                isRolling = false;
-                actionTimeRemaining = punchDuration;
-                hasHitEnemy = false;
-                hasPunchSounded = false;
-            }
-            else if (Input.GetKey(rollKey) || StaticVariables.pressingRollButton) { 
-                if (canRoll) {
-                    if (isRolling) {animator.SetTrigger("reroll");}
-                    isRolling = true;
+        if (!StaticVariables.pausedFromAchievements) {
+            if (actionTimeRemaining == 0 && !isDying && !hasLost && !isDead && Time.timeScale > 0) {
+                if (Input.GetKeyDown(punchKey) || StaticVariables.justPressedPunchButton) {
+                    StaticVariables.justPressedPunchButton = false;
+                    isPunching = true;
+                    isWalking = false;
+                    isRolling = false;
+                    actionTimeRemaining = punchDuration;
+                    hasHitEnemy = false;
+                    hasPunchSounded = false;
+                    StaticVariables.punchCount++;
+                    StaticVariables.enemiesPunchedSimultaneously = new List<Enemy>();
+                    //print(StaticVariables.enemiesPunchedSimultaneously.Count);
+                }
+                else if (Input.GetKey(rollKey) || StaticVariables.pressingRollButton) {
+                    if (canRoll) {
+                        if (isRolling) { animator.SetTrigger("reroll"); }
+                        isRolling = true;
+                        isWalking = false;
+                        isPunching = false;
+                        actionTimeRemaining = rollDuration;
+                        hasRollSounded = false;
+                    }
+                }
+                else if (Input.GetKey(upKey) || Input.GetKey(downKey) || Input.GetKey(leftKey) || Input.GetKey(rightKey)) {
+                    isWalking = true;
+                    isRolling = false;
+                    isPunching = false;
+                }
+                else if (StaticVariables.usingJoystick) {
+                    isWalking = true;
+                    isRolling = false;
+                    isPunching = false;
+                }
+                else {
+                    isRolling = false;
                     isWalking = false;
                     isPunching = false;
-                    actionTimeRemaining = rollDuration;
-                    hasRollSounded = false;
                 }
-            }
-            else if (Input.GetKey(upKey) || Input.GetKey(downKey) || Input.GetKey(leftKey) || Input.GetKey(rightKey)) {
-                isWalking = true;
-                isRolling = false;
-                isPunching = false;
-            }
-            else if (StaticVariables.usingJoystick) {
-                isWalking = true;
-                isRolling = false;
-                isPunching = false;
-            }
-            else {
-                isRolling = false;
-                isWalking = false;
-                isPunching = false;
             }
         }
     }
@@ -207,6 +212,22 @@ public class Player : MonoBehaviour{
                 hasHitEnemy = true;
                 foreach (Enemy e in enemiesInRange){
                     e.hasBeenHit();
+
+                    //used to check if player has accomplished achievement "Defeat all enemies in level 24 with punches"
+                    if (!e.isDead) {
+                        if (!StaticVariables.enemiesPunched.Contains(e)) {
+                            StaticVariables.enemiesPunched.Add(e);
+                            //print(StaticVariables.enemiesPunched.Count);
+                        }
+                    }
+
+                    //used to check if player has accomplished "Hit 3 enemies with one punch"
+                    if (!e.isDead) {
+                        if (!StaticVariables.enemiesPunchedSimultaneously.Contains(e)) {
+                            StaticVariables.enemiesPunchedSimultaneously.Add(e);
+                            //print(StaticVariables.enemiesPunchedSimultaneously.Count);
+                        }
+                    }
                 }
             }
         }
@@ -297,24 +318,26 @@ public class Player : MonoBehaviour{
     }
 
     public void hasBeenHit() {
-        if (!isDead) {
-            if (HP > 0) {
-                if (canTakeDamage) { HP -= 1; }
+        //if (!StaticVariables.pausedFromAchievements) {
+            if (!isDead) {
+                if (HP > 0) {
+                    if (canTakeDamage) { HP -= 1; }
+                }
+                if (HP <= 0 && !isDying) {
+                    animator.SetTrigger("dying");
+                    isWalking = false;
+                    isRolling = false;
+                    isPunching = false;
+                    isDying = true;
+                    actionTimeRemaining = deathDuration;
+                    audioManager.fadeOutAll();
+                    audioManager.play("Player Death");
+                }
+                if (HP > 0) {
+                    audioManager.play("Player Gets Hit");
+                }
             }
-            if (HP <= 0 && !isDying) {
-                animator.SetTrigger("dying");
-                isWalking = false;
-                isRolling = false;
-                isPunching = false;
-                isDying = true;
-                actionTimeRemaining = deathDuration;
-                audioManager.fadeOutAll();
-                audioManager.play("Player Death");
-            }
-            if (HP > 0){
-                audioManager.play("Player Gets Hit");
-            }
-        }
+        //}
     }
 
     private void die() {
@@ -392,7 +415,7 @@ public class Player : MonoBehaviour{
 
     private void checkIfOutOfBounds() {
         if ((transform.position.z < -6f) || (transform.position.z > 5.9f) || (transform.position.x < -72.7f) || (transform.position.x > -61.1f))  {
-            StaticVariables.hasBeenOutOfBounds = true;
+            StaticVariables.isOutOfBounds = true;
         }
     }
 

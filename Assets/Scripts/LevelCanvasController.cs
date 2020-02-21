@@ -1,9 +1,9 @@
 ﻿using System.Collections;
 using System.Collections.Generic;
-using UnityEngine;
-using UnityEngine.SceneManagement;
-using UnityEngine.UI;
 using System;
+using UnityEngine;
+using UnityEngine.UI;
+using UnityEngine.SceneManagement;
 
 public class LevelCanvasController : MonoBehaviour{
 
@@ -16,6 +16,7 @@ public class LevelCanvasController : MonoBehaviour{
     public GameObject pausedCanvas;
     public GameObject winCanvas;
     public GameObject loseCanvas;
+    public GameObject achievementCanvas;
     
     private UnityEngine.UI.Text ingameLevelNumberTextBox;
     private UnityEngine.UI.Text pausedeLevelNumberTextBox;
@@ -28,6 +29,9 @@ public class LevelCanvasController : MonoBehaviour{
 
     [Header("Tutorials and Menus")]
     public bool showHealth = true;
+
+    [Header("Achievement Zoom-In Time")]
+    public float achievementTime = 0.5f;
 
     private Player player;
     private List<GameObject> hearts;
@@ -50,6 +54,9 @@ public class LevelCanvasController : MonoBehaviour{
     private GameObject levelNumberText;
     private GameObject heartsPosition;
     private int levelNumber;
+    private bool fadingInAchievement = false;
+    private float fadingAchievementTimer = 0f;
+    private string achievementsToShow = "";
 
     void Start() {
         player = GameObject.FindWithTag("Player").GetComponent<Player>();
@@ -72,6 +79,7 @@ public class LevelCanvasController : MonoBehaviour{
         pausedCanvas.SetActive(false);
         winCanvas.SetActive(false);
         loseCanvas.SetActive(false);
+        achievementCanvas.SetActive(false);
 
         if (showHealth) { drawAllHearts(); }
         
@@ -86,6 +94,8 @@ public class LevelCanvasController : MonoBehaviour{
 
         ingameCanvas.transform.Find("Hearts Position").gameObject.SetActive(false);
         updatePlayerColor();
+        StaticVariables.punchCount = 0;
+        StaticVariables.enemiesPunched = new List<Enemy>();
     }
 
     
@@ -95,6 +105,58 @@ public class LevelCanvasController : MonoBehaviour{
         hitPauseKey();
         win();
         lose();
+
+        if (fadingInAchievement) {
+            fadingAchievementTimer -= Time.deltaTime;
+            if (fadingAchievementTimer < 0f) { fadingAchievementTimer = 0f; }
+            float fadePercent = 1 - (fadingAchievementTimer / achievementTime);
+
+            achievementCanvas.transform.Find("Achievement").localScale = new Vector3(fadePercent, fadePercent, fadePercent);
+            achievementCanvas.transform.Find("Double Achievement").localScale = new Vector3(fadePercent, fadePercent, fadePercent);
+            achievementCanvas.transform.Find("Triple Achievement").localScale = new Vector3(fadePercent, fadePercent, fadePercent);
+            if (fadingAchievementTimer <= 0f) {
+                fadingInAchievement = false;
+            }
+        }
+
+        if (StaticVariables.isOutOfBounds && !StaticVariables.hasBeenOutOfBounds) {
+            StaticVariables.hasBeenOutOfBounds = true;
+            //unlockAchievement("GET OUT OF BOUNDS");
+            string t = "GET OUT OF BOUNDS";
+            if (!checkIfAchievementUnlockedYet(t)) {
+                achievementsToShow += (t + "-");
+                addStringToAchievements(t);
+                //StaticVariables.pausedFromAchievements = true;
+                /*
+                Time.timeScale = 0f;
+                if (StaticVariables.globalAudioScale > 0) {
+                    audioManager.pause();
+                }
+                */
+            }
+        }
+        
+        if (StaticVariables.enemiesPunchedSimultaneously.Count >= 3) {
+            string t = "HIT 3 ENEMIES\nWITH ONE PUNCH";
+            if (!checkIfAchievementUnlockedYet(t)) {
+                achievementsToShow += (t + "-");
+                addStringToAchievements(t);
+                //StaticVariables.pausedFromAchievements = true;
+                /*
+                Time.timeScale = 0f;
+                if (StaticVariables.globalAudioScale > 0) {
+                    audioManager.pause();
+                }
+                */
+            }
+        }
+
+        
+
+        if (achievementsToShow != "") {
+            showAchievements();
+            achievementsToShow = "";
+        }
 
     }
 
@@ -165,17 +227,20 @@ public class LevelCanvasController : MonoBehaviour{
 
 
     private void pause() {
-        isPaused = true;
-        isPlaying = false;
-        Time.timeScale = 0f;
-        pausedCanvas.SetActive(true);
+        if (!StaticVariables.pausedFromAchievements && !player.hasWonYet()) {
+            isPaused = true;
+            isPlaying = false;
+            Time.timeScale = 0f;
+            pausedCanvas.SetActive(true);
 
-        pauseButton.SetActive(false);
-        winCanvas.SetActive(false);
-        loseCanvas.SetActive(false);
-        if (StaticVariables.globalAudioScale > 0) {
-            audioManager.pause();
+            pauseButton.SetActive(false);
+            winCanvas.SetActive(false);
+            loseCanvas.SetActive(false);
+            if (StaticVariables.globalAudioScale > 0) {
+                audioManager.pause();
+            }
         }
+        
         
     }
 
@@ -194,7 +259,7 @@ public class LevelCanvasController : MonoBehaviour{
             isPlaying = false;
             winCanvas.SetActive(true);
 
-            pauseButton.SetActive(false);
+            //pauseButton.SetActive(false);
             pausedCanvas.SetActive(false);
             loseCanvas.SetActive(false);
             audioManager.stopAll();
@@ -203,23 +268,81 @@ public class LevelCanvasController : MonoBehaviour{
             if (StaticVariables.levelsBeaten < levelNumber) {
                 StaticVariables.levelsBeaten = levelNumber;
             }
-            if (player.HP == player.startingHP) {
-                //something happens here
-                //print(StaticVariables.levelsBeatenWithFullHP);
-                string[] levels = StaticVariables.levelsBeatenWithFullHP.Split(',');
-                bool hasBeatenBefore = false;
-                foreach (string level in levels) {
-                    if (level == (levelNumber + "")) {
-                        hasBeatenBefore = true;
-                    }
-                }
-                if (!hasBeatenBefore) {
-                    StaticVariables.levelsBeatenWithFullHP += "," + levelNumber;
-                }
+            if (StaticVariables.heartsLeftPerLevel[levelNumber - 1] < player.HP) {
+                StaticVariables.heartsLeftPerLevel[levelNumber - 1] = player.HP;
+            }
+            checkAchievementsOnWin();
+        }
+    }
 
-                //print(StaticVariables.levelsBeatenWithFullHP);
+    private void checkAchievementsOnWin() {
+
+        if (levelNumber == 18) {
+            string t = "BEAT LEVEL 18";
+            if (!checkIfAchievementUnlockedYet(t)) {
+                achievementsToShow += (t + "-");
+                //unlockAchievement(t);
+                addStringToAchievements(t);
             }
         }
+        if (levelNumber == 30) {
+            string t = "BEAT LEVEL 30";
+            if (!checkIfAchievementUnlockedYet(t)) {
+                achievementsToShow += (t + "-");
+                //unlockAchievement(t);
+                addStringToAchievements(t);
+            }
+        }
+        if (levelNumber == 36) {
+            string t = "BEAT LEVEL 36";
+            if (!checkIfAchievementUnlockedYet(t)) {
+                achievementsToShow += (t + "-");
+                //unlockAchievement(t);
+                addStringToAchievements(t);
+            }
+        }
+        if (countLevelsWith3Hearts() == 18) {
+            string t = "BEAT ANY 18 LEVELS\nWITH 3 HEARTS LEFT";
+            if (!checkIfAchievementUnlockedYet(t)) {
+                achievementsToShow += (t + "-");
+                //unlockAchievement(t);
+                addStringToAchievements(t);
+            }
+        }
+        if (countLevelsWith3Hearts() == 30) {
+            string t = "BEAT ANY 30 LEVELS\nWITH 3 HEARTS LEFT";
+            if (!checkIfAchievementUnlockedYet(t)) {
+                achievementsToShow += (t + "-");
+                //unlockAchievement(t);
+                addStringToAchievements(t);
+            }
+        }
+        if (countLevelsWith3Hearts() == 36) {
+            string t = "BEAT ALL LEVELS\nWITH 3 HEARTS LEFT";
+            if (!checkIfAchievementUnlockedYet(t)) {
+                achievementsToShow += (t + "-");
+                //unlockAchievement(t);
+                addStringToAchievements(t);
+            }
+        }
+        if (levelNumber == 36) {
+            string t = "BEAT LEVEL 36\nWITHOUT PUNCHING";
+            if (!checkIfAchievementUnlockedYet(t) && StaticVariables.punchCount == 0) {
+                achievementsToShow += (t + "-");
+                //unlockAchievement(t);
+                addStringToAchievements(t);
+            }
+        }
+        if (levelNumber == 24) {
+            string t = "DEFEAT ALL ENEMIES IN\nLEVEL 24 WITH PUNCHES";
+            if (!checkIfAchievementUnlockedYet(t) && StaticVariables.enemiesPunched.Count >= 9) {
+                achievementsToShow += (t + "-");
+                //unlockAchievement(t);
+                addStringToAchievements(t);
+            }
+
+        }
+
     }
 
     private void lose() {
@@ -233,6 +356,19 @@ public class LevelCanvasController : MonoBehaviour{
             pausedCanvas.SetActive(false);
             winCanvas.SetActive(false);
             audioManager.fadeIn("Defeat Jingle");
+
+            if ((StaticVariables.lastLevelLost == StaticVariables.secondLastLevelLost) && (StaticVariables.lastLevelLost == levelNumber)){
+                string t = "LOSE THE SAME LEVEL\n3 TIMES IN A ROW";
+                if (!checkIfAchievementUnlockedYet(t)) {
+                    achievementsToShow += (t + "-");
+                    //unlockAchievement(t);
+                    addStringToAchievements(t);
+                }
+            }
+            else {
+                StaticVariables.secondLastLevelLost = StaticVariables.lastLevelLost;
+                StaticVariables.lastLevelLost = levelNumber;
+            }
         }
     }
 
@@ -318,5 +454,107 @@ public class LevelCanvasController : MonoBehaviour{
         if (StaticVariables.hasChangedColorYet) {
             player.transform.Find("Model").GetComponent<Renderer>().sharedMaterial = StaticVariables.playerMat;
         }
+    }
+    /*
+    private void unlockAchievement(string t) {
+        achievementCanvas.SetActive(true);
+        fadingInAchievement = true;
+        fadingAchievementTimer = achievementTime;
+        achievementCanvas.transform.Find("Achievement").Find("Text").GetComponent<Text>().text = t;
+
+    }
+    */
+
+    private void showAchievements() {
+        StaticVariables.pausedFromAchievements = true;
+        audioManager.play("Achievement");
+        achievementsToShow = achievementsToShow.Remove(achievementsToShow.Length - 1, 1);
+        //print(achievementsToShow);
+        string[] achvs = achievementsToShow.Split('-');
+        achievementCanvas.SetActive(true);
+        fadingInAchievement = true;
+        fadingAchievementTimer = achievementTime;
+        achievementCanvas.transform.Find("Achievement").localScale = new Vector3(0f, 0f, 0f);
+        achievementCanvas.transform.Find("Double Achievement").localScale = new Vector3(0f, 0f, 0f);
+        achievementCanvas.transform.Find("Triple Achievement").localScale = new Vector3(0f, 0f, 0f);
+
+        if (achvs.Length == 1) {
+            achievementCanvas.transform.Find("Achievement").gameObject.SetActive(true);
+            achievementCanvas.transform.Find("Double Achievement").gameObject.SetActive(false);
+            achievementCanvas.transform.Find("Triple Achievement").gameObject.SetActive(false);
+            achievementCanvas.transform.Find("Achievement").Find("Text").GetComponent<Text>().text = achvs[0];
+        }
+        else if (achvs.Length == 2){
+            achievementCanvas.transform.Find("Achievement").gameObject.SetActive(false);
+            achievementCanvas.transform.Find("Double Achievement").gameObject.SetActive(true);
+            achievementCanvas.transform.Find("Triple Achievement").gameObject.SetActive(false);
+            achievementCanvas.transform.Find("Double Achievement").Find("Text 1").GetComponent<Text>().text = achvs[0];
+            achievementCanvas.transform.Find("Double Achievement").Find("Text 2").GetComponent<Text>().text = achvs[1];
+        }
+        else if (achvs.Length == 3) {
+            achievementCanvas.transform.Find("Achievement").gameObject.SetActive(false);
+            achievementCanvas.transform.Find("Double Achievement").gameObject.SetActive(false);
+            achievementCanvas.transform.Find("Triple Achievement").gameObject.SetActive(true);
+            achievementCanvas.transform.Find("Triple Achievement").Find("Text 1").GetComponent<Text>().text = achvs[0];
+            achievementCanvas.transform.Find("Triple Achievement").Find("Text 2").GetComponent<Text>().text = achvs[1];
+            achievementCanvas.transform.Find("Triple Achievement").Find("Text 3").GetComponent<Text>().text = achvs[2];
+
+        }
+
+
+        /*
+        string newText = "";
+        int count = 0;
+        foreach(string achv in achvs) {
+            if (count > 0) { newText += "\n&\n"; }
+            count++;
+            newText += achv;
+        }
+        achievementCanvas.transform.Find("Achievement").Find("Text").GetComponent<Text>().text = newText;
+        if (achvs.Length >= 2) {
+            achievementCanvas.transform.Find("Achievement").Find("Title").GetComponent<Text>().text = "ACHIEVEMENTS UNLOCKED!";
+        }
+        else {
+            achievementCanvas.transform.Find("Achievement").Find("Title").GetComponent<Text>().text = "ACHIEVEMENT UNLOCKED!";
+        }
+        */
+    }
+
+    public void _btnCloseAchievement() {
+        achievementCanvas.SetActive(false);
+        StaticVariables.pausedFromAchievements = false;
+        /*
+        if (Time.timeScale == 0f) {
+            Time.timeScale = 1f;
+            if (StaticVariables.globalAudioScale > 0) {
+                audioManager.resume();
+            }
+        }
+        */
+    }
+
+    public void _btnGoToAchievements() {
+        StaticVariables.goingToAchievements = true;
+        quit();
+    }
+
+
+    private int countLevelsWith3Hearts() {
+        int count = 0;
+        foreach (int hearts in StaticVariables.heartsLeftPerLevel) {
+            if (hearts == 3) { count++; }
+        }
+        return count;
+    }
+
+    private bool checkIfAchievementUnlockedYet(string text) {
+        foreach(string achvt in StaticVariables.achievementsUnlocked.Split('-')) {
+            if (achvt == text) { return true; }
+        }
+        return false;
+    }
+
+    private void addStringToAchievements(string text) {
+        StaticVariables.achievementsUnlocked += ("-" + text);
     }
 }

@@ -72,6 +72,18 @@ public class MainMenuCanvasController : MonoBehaviour {
         showAchievementPlayerModels();
         if (StaticVariables.joystickOnRight) { flipControls(); }
 
+        lockLevels();
+        showHeartsOnLevels();
+        lockAchievements();
+
+        if (StaticVariables.goingToAchievements) {
+            homeCanvas.SetActive(false);
+            achievementsCanvas.SetActive(true);
+            StaticVariables.goingToAchievements = false;
+            showAchievementPlayerModels();
+        }
+
+        //print(StaticVariables.achievementsUnlocked);
     }
 
     private void Update() {
@@ -127,8 +139,10 @@ public class MainMenuCanvasController : MonoBehaviour {
     }
 
     public void _btnLoadLevel(int x) {
-        audioManager.fadeOutAll();
-        SceneManager.LoadScene("Level " + x.ToString());
+        if (StaticVariables.levelsBeaten + 1 >= x) {
+            audioManager.fadeOutAll();
+            SceneManager.LoadScene("Level " + x);
+        }
     }
 
     private void hitBackKey() {
@@ -305,6 +319,90 @@ public class MainMenuCanvasController : MonoBehaviour {
 
         rightModel.gameObject.SetActive((!StaticVariables.joystickOnRight) && (achievementsCanvas.activeSelf));
         leftModel.gameObject.SetActive((StaticVariables.joystickOnRight) && (achievementsCanvas.activeSelf));
+    }
+
+    private void lockLevels() {
+        //print(StaticVariables.levelsBeaten);
+        for (int i = 1; i<= 36; i++) {
+            GameObject levelObject = playCanvas.transform.Find("Level " + i).gameObject;
+            if (StaticVariables.levelsBeaten + 1 >= i) {
+                levelObject.transform.Find("Text").gameObject.SetActive(true);
+                levelObject.transform.Find("Locked").gameObject.SetActive(false);
+            }
+            else {
+                levelObject.transform.Find("Text").gameObject.SetActive(false);
+                levelObject.transform.Find("Locked").gameObject.SetActive(true);
+            }
+        }
+    }
+
+    private void showHeartsOnLevels() {
+        for (int i = 0; i < 36; i++) {
+            GameObject levelObject = playCanvas.transform.Find("Level " + (i + 1)).gameObject;
+            GameObject heartsObject = levelObject.transform.Find("Hearts").gameObject;
+            if (i > StaticVariables.levelsBeaten) {
+                heartsObject.SetActive(false);
+            }
+            else {
+                heartsObject.SetActive(true);
+                for (int j = 1; j<=3; j++) {
+                    heartsObject.transform.Find("Heart " + j).gameObject.SetActive(StaticVariables.heartsLeftPerLevel[i] >= j);
+                }
+            }
+        }
+    }
+
+    private void lockAchievements() {
+        foreach (Transform child in achievementsCanvas.transform) {
+            if (child.gameObject.name.Contains("Color")) {
+                //print(child);
+                setAchievementLock(child, false);
+                //setAchievementLock(child, true);
+                string req = child.Find("Requirement").gameObject.GetComponent<Text>().text;
+                foreach (string achvt in StaticVariables.achievementsUnlocked.Split('-')) {
+                    if (achvt == req) {
+                        setAchievementLock(child, true);
+                    }
+                }
+                /*
+                switch (req) {
+                    case "BEAT LEVEL 18":
+                        setAchievementLock(child, StaticVariables.levelsBeaten >= 18);
+                        break;
+                    case "BEAT LEVEL 30":
+                        setAchievementLock(child, StaticVariables.levelsBeaten >= 30);
+                        break;
+                    case "BEAT ALL LEVELS":
+                        setAchievementLock(child, StaticVariables.levelsBeaten >= 36);
+                        break;
+                    case "GET OUT OF BOUNDS":
+                        setAchievementLock(child, StaticVariables.hasBeenOutOfBounds);
+                        break;
+                    case "BEAT ANY 18 LEVELS\nWITH 3 HEARTS LEFT":
+                        setAchievementLock(child, countLevelsWith3Hearts() >= 18);
+                        break;
+                    case "BEAT ANY 30 LEVELS\nWITH 3 HEARTS LEFT":
+                        setAchievementLock(child, countLevelsWith3Hearts() >= 30);
+                        break;
+                    case "BEAT ALL LEVELS\nWITH 3 HEARTS LEFT":
+                        setAchievementLock(child, countLevelsWith3Hearts() >= 36);
+                        break;
+                }
+                */
+            }
+        }
+    }
+
+    private void setAchievementLock(Transform obj, bool cond) {
+        obj.Find("Overlay").gameObject.SetActive(!cond);
+    }
+
+    private int countLevelsWith3Hearts() {
+        int count = 0;
+        foreach(int hearts in StaticVariables.heartsLeftPerLevel) {
+            if (hearts == 3) { count++; }
+        }
+        return count;
     }
 
 }

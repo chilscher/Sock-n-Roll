@@ -37,7 +37,7 @@ public class Enemy : MonoBehaviour{
     private bool isIdle = false;
     private bool isDying = false;
     private bool isShooting = false;
-    private bool isDead = false;
+    public bool isDead = false;
     private bool isReviving = false;
     private bool hasFiredBullet = false; //if the enemy has fired a bullet during the current shot animation
     private AudioManager audioManager;

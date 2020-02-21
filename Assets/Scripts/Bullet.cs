@@ -8,7 +8,9 @@ public class Bullet : MonoBehaviour{
 
     private Vector3 trajectory;
 
-    void Update(){transform.Translate(speed * trajectory * Time.deltaTime);}
+    void Update() {
+        if (!StaticVariables.pausedFromAchievements) { transform.Translate(speed * trajectory * Time.deltaTime); }
+    }
 
     public void setTrajectory(Vector3 traj) {trajectory = traj;}
 
