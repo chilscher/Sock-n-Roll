@@ -60,9 +60,10 @@ public class Enemy : MonoBehaviour{
         countDownToShoot();
 
         rotateTowardsPlayer();
-
-        shoot();
-        fireBullet();
+        if (!StaticVariables.pausedFromAchievements) {
+            shoot();
+            fireBullet();
+        }
         goBackToIdle();
 
         die();

@@ -21,7 +21,6 @@ public static class SaveSystem {
 
     public static void LoadGame() {
         if (File.Exists(path)) {
-            //Debug.Log(path);
             BinaryFormatter formatter = new BinaryFormatter();
             FileStream stream = new FileStream(path, FileMode.Open);
             if (stream.Length == 0) {

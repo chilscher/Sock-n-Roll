@@ -131,7 +131,6 @@ public class Player : MonoBehaviour{
                     hasPunchSounded = false;
                     StaticVariables.punchCount++;
                     StaticVariables.enemiesPunchedSimultaneously = new List<Enemy>();
-                    //print(StaticVariables.enemiesPunchedSimultaneously.Count);
                 }
                 else if (Input.GetKey(rollKey) || StaticVariables.pressingRollButton) {
                     if (canRoll) {
@@ -217,7 +216,6 @@ public class Player : MonoBehaviour{
                     if (!e.isDead) {
                         if (!StaticVariables.enemiesPunched.Contains(e)) {
                             StaticVariables.enemiesPunched.Add(e);
-                            //print(StaticVariables.enemiesPunched.Count);
                         }
                     }
 
@@ -225,7 +223,6 @@ public class Player : MonoBehaviour{
                     if (!e.isDead) {
                         if (!StaticVariables.enemiesPunchedSimultaneously.Contains(e)) {
                             StaticVariables.enemiesPunchedSimultaneously.Add(e);
-                            //print(StaticVariables.enemiesPunchedSimultaneously.Count);
                         }
                     }
                 }
@@ -318,26 +315,24 @@ public class Player : MonoBehaviour{
     }
 
     public void hasBeenHit() {
-        //if (!StaticVariables.pausedFromAchievements) {
-            if (!isDead) {
-                if (HP > 0) {
-                    if (canTakeDamage) { HP -= 1; }
-                }
-                if (HP <= 0 && !isDying) {
-                    animator.SetTrigger("dying");
-                    isWalking = false;
-                    isRolling = false;
-                    isPunching = false;
-                    isDying = true;
-                    actionTimeRemaining = deathDuration;
-                    audioManager.fadeOutAll();
-                    audioManager.play("Player Death");
-                }
-                if (HP > 0) {
-                    audioManager.play("Player Gets Hit");
-                }
+        if (!isDead) {
+            if (HP > 0) {
+                if (canTakeDamage) { HP -= 1; }
             }
-        //}
+            if (HP <= 0 && !isDying) {
+                animator.SetTrigger("dying");
+                isWalking = false;
+                isRolling = false;
+                isPunching = false;
+                isDying = true;
+                actionTimeRemaining = deathDuration;
+                audioManager.fadeOutAll();
+                audioManager.play("Player Death");
+            }
+            if (HP > 0) {
+                audioManager.play("Player Gets Hit");
+            }
+        }
     }
 
     private void die() {
@@ -403,15 +398,6 @@ public class Player : MonoBehaviour{
     public int getHP() {return HP;}
 
     public bool getIsDead() { return isDead; }
-    /*
-    public void OnCollisionEnter(Collision collision) {
-        print("collision");
-        if (collision.gameObject.name == "Bad Grass") {
-            print("on bad grass");
-
-        }
-    }
-    */
 
     private void checkIfOutOfBounds() {
         if ((transform.position.z < -6f) || (transform.position.z > 5.9f) || (transform.position.x < -72.7f) || (transform.position.x > -61.1f))  {

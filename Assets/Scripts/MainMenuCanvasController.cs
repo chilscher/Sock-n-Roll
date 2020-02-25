@@ -28,10 +28,6 @@ public class MainMenuCanvasController : MonoBehaviour {
 
     private GameObject homeRevPlayerBtn;
     private GameObject homeRevEnemyBtn;
-    //private GameObject playRevPlayerBtn;
-    //private GameObject playRevEnemyBtn;
-    //private GameObject creditsRevPlayerBtn;
-    //private GameObject creditsRevEnemyBtn;
 
     private Player player;
     private Enemy enemy;
@@ -43,10 +39,6 @@ public class MainMenuCanvasController : MonoBehaviour {
         audioManager = FindObjectOfType<AudioManager>();
         homeRevPlayerBtn = homeCanvas.transform.Find("Revive Player Button").gameObject;
         homeRevEnemyBtn = homeCanvas.transform.Find("Revive Enemy Button").gameObject;
-        //playRevPlayerBtn = playCanvas.transform.Find("Revive Player Button").gameObject;
-        //playRevEnemyBtn = playCanvas.transform.Find("Revive Enemy Button").gameObject;
-        //creditsRevPlayerBtn = creditsCanvas.transform.Find("Revive Player Button").gameObject;
-        //creditsRevEnemyBtn = creditsCanvas.transform.Find("Revive Enemy Button").gameObject;
         settingsCanvas.SetActive(false);
         homeCanvas.SetActive(true);
         playCanvas.SetActive(false);
@@ -61,7 +53,6 @@ public class MainMenuCanvasController : MonoBehaviour {
             StaticVariables.isApplicationLaunchingFirstTime = false;
 
             audioManager.applyGlobalVolume();
-            //updatePlayerColor();
         }
         
         updatePlayerColor();
@@ -82,21 +73,13 @@ public class MainMenuCanvasController : MonoBehaviour {
             StaticVariables.goingToAchievements = false;
             showAchievementPlayerModels();
         }
-
-        //print(StaticVariables.achievementsUnlocked);
+        
     }
 
     private void Update() {
-        //print(StaticVariables.hasBeenOutOfBounds);
         hitBackKey();
-        if (canReviveEnemy) {
-            homeRevEnemyBtn.SetActive(enemy.getIsDead());
-            //playRevEnemyBtn.SetActive(enemy.getIsDead());
-            //creditsRevEnemyBtn.SetActive(enemy.getIsDead());
-        }
+        if (canReviveEnemy) { homeRevEnemyBtn.SetActive(enemy.getIsDead()); }
         homeRevPlayerBtn.SetActive(player.getIsDead());
-        //playRevPlayerBtn.SetActive(player.getIsDead());
-        //creditsRevPlayerBtn.SetActive(player.getIsDead());
     }
 
     public void _btnMainMenu() {
@@ -229,8 +212,6 @@ public class MainMenuCanvasController : MonoBehaviour {
     private void updatePlayerColor() {
         if (StaticVariables.hasChangedColorYet) {
             player.transform.Find("Model").GetComponent<Renderer>().sharedMaterial = StaticVariables.playerMat;
-            //achievementsCanvas.transform.Find("Duplicate Player Right").Find("Model").GetComponent<Renderer>().sharedMaterial = StaticVariables.playerMat;
-            //achievementsCanvas.transform.Find("Duplicate Player Left").Find("Model").GetComponent<Renderer>().sharedMaterial = StaticVariables.playerMat;
             rightModel.transform.Find("Model").GetComponent<Renderer>().sharedMaterial = StaticVariables.playerMat;
             leftModel.transform.Find("Model").GetComponent<Renderer>().sharedMaterial = StaticVariables.playerMat;
             showAchievementPlayerModels();
@@ -248,6 +229,8 @@ public class MainMenuCanvasController : MonoBehaviour {
                 }
             }
         }
+
+        hideAchievements();
     }
 
     public void _btnAchievements() {
@@ -314,15 +297,11 @@ public class MainMenuCanvasController : MonoBehaviour {
     }
 
     private void showAchievementPlayerModels() {
-        //achievementsCanvas.transform.Find("Duplicate Player Right").gameObject.SetActive(!StaticVariables.joystickOnRight);
-        //achievementsCanvas.transform.Find("Duplicate Player Left").gameObject.SetActive(StaticVariables.joystickOnRight);
-
         rightModel.gameObject.SetActive((!StaticVariables.joystickOnRight) && (achievementsCanvas.activeSelf));
         leftModel.gameObject.SetActive((StaticVariables.joystickOnRight) && (achievementsCanvas.activeSelf));
     }
 
     private void lockLevels() {
-        //print(StaticVariables.levelsBeaten);
         for (int i = 1; i<= 36; i++) {
             GameObject levelObject = playCanvas.transform.Find("Level " + i).gameObject;
             if (StaticVariables.levelsBeaten + 1 >= i) {
@@ -355,42 +334,74 @@ public class MainMenuCanvasController : MonoBehaviour {
     private void lockAchievements() {
         foreach (Transform child in achievementsCanvas.transform) {
             if (child.gameObject.name.Contains("Color")) {
-                //print(child);
                 setAchievementLock(child, false);
-                //setAchievementLock(child, true);
                 string req = child.Find("Requirement").gameObject.GetComponent<Text>().text;
                 foreach (string achvt in StaticVariables.achievementsUnlocked.Split('-')) {
                     if (achvt == req) {
                         setAchievementLock(child, true);
                     }
                 }
-                /*
-                switch (req) {
-                    case "BEAT LEVEL 18":
-                        setAchievementLock(child, StaticVariables.levelsBeaten >= 18);
-                        break;
-                    case "BEAT LEVEL 30":
-                        setAchievementLock(child, StaticVariables.levelsBeaten >= 30);
-                        break;
-                    case "BEAT ALL LEVELS":
-                        setAchievementLock(child, StaticVariables.levelsBeaten >= 36);
-                        break;
-                    case "GET OUT OF BOUNDS":
-                        setAchievementLock(child, StaticVariables.hasBeenOutOfBounds);
-                        break;
-                    case "BEAT ANY 18 LEVELS\nWITH 3 HEARTS LEFT":
-                        setAchievementLock(child, countLevelsWith3Hearts() >= 18);
-                        break;
-                    case "BEAT ANY 30 LEVELS\nWITH 3 HEARTS LEFT":
-                        setAchievementLock(child, countLevelsWith3Hearts() >= 30);
-                        break;
-                    case "BEAT ALL LEVELS\nWITH 3 HEARTS LEFT":
-                        setAchievementLock(child, countLevelsWith3Hearts() >= 36);
-                        break;
-                }
-                */
             }
         }
+        hideAchievements();
+    }
+
+    private void hideAchievements() {
+        string[] alwaysShowing = { "Blue", "Purple", "Yellow", "Orange" };
+        string[] untilBeaten36 = { "Bronze", "Silver", "Gold", "White" };
+        string[] untilBeaten24 = { "Pink" };
+        string[] untilAllOthers1 = { "Green" };
+        string[] untilAllOthers2 = { "Black" };
+        string[] untilAllOthers3 = { "Checkered" };
+
+        List<string> alreadyUnlocked = new List<string>(); //added here if the player already has them
+        List<string> visible = new List<string>(); //if the player does not have them but if they are visible
+        List<string> notVisible = new List<string>(); //if the player cannot yet see them
+        
+        foreach(string s in alwaysShowing) { addAchievementToList(alreadyUnlocked, visible, notVisible, s, true); }
+        foreach (string s in untilBeaten36) { addAchievementToList(alreadyUnlocked, visible, notVisible, s, StaticVariables.levelsBeaten >= 36); }
+        foreach (string s in untilBeaten24) { addAchievementToList(alreadyUnlocked, visible, notVisible, s, StaticVariables.levelsBeaten >= 24); }
+        foreach (string s in untilAllOthers1) { addAchievementToList(alreadyUnlocked, visible, notVisible, s, (visible.Count == 0 && notVisible.Count == 0)); }
+        foreach (string s in untilAllOthers2) { addAchievementToList(alreadyUnlocked, visible, notVisible, s, (visible.Count == 0 && notVisible.Count == 0)); }
+        foreach (string s in untilAllOthers3) { addAchievementToList(alreadyUnlocked, visible, notVisible, s, (visible.Count == 0 && notVisible.Count == 0)); }
+
+        foreach (string s in alreadyUnlocked) {
+            achievementsCanvas.transform.Find("Color " + s).Find("Requirement").gameObject.SetActive(true);
+            achievementsCanvas.transform.Find("Color " + s).Find("Reward").gameObject.SetActive(true);
+            achievementsCanvas.transform.Find("Color " + s).Find("Button").gameObject.SetActive(true);
+            achievementsCanvas.transform.Find("Color " + s).Find("Requirement 2").gameObject.SetActive(false);
+            achievementsCanvas.transform.Find("Color " + s).Find("Requirement 3").gameObject.SetActive(false);
+
+        }
+        foreach (string s in visible) {
+            achievementsCanvas.transform.Find("Color " + s).Find("Requirement").gameObject.SetActive(false);
+            achievementsCanvas.transform.Find("Color " + s).Find("Reward").gameObject.SetActive(false);
+            achievementsCanvas.transform.Find("Color " + s).Find("Button").gameObject.SetActive(false);
+            achievementsCanvas.transform.Find("Color " + s).Find("Requirement 2").gameObject.SetActive(true);
+            achievementsCanvas.transform.Find("Color " + s).Find("Requirement 3").gameObject.SetActive(false);
+
+        }
+        foreach (string s in notVisible) {
+            achievementsCanvas.transform.Find("Color " + s).Find("Requirement").gameObject.SetActive(false);
+            achievementsCanvas.transform.Find("Color " + s).Find("Reward").gameObject.SetActive(false);
+            achievementsCanvas.transform.Find("Color " + s).Find("Button").gameObject.SetActive(false);
+            achievementsCanvas.transform.Find("Color " + s).Find("Requirement 2").gameObject.SetActive(false);
+            achievementsCanvas.transform.Find("Color " + s).Find("Requirement 3").gameObject.SetActive(true);
+        }
+    }
+
+    private bool hasPlayerUnlockedAchievement(string color) {
+        string requirement = achievementsCanvas.transform.Find("Color " + color).Find("Requirement").GetComponent<Text>().text;
+        foreach (string unlock in StaticVariables.achievementsUnlocked.Split('-')) {
+            if (unlock == requirement) { return true; }
+        }
+        return false;
+    }
+
+    private void addAchievementToList(List<string> alreadyUnlocked, List<string> visible, List<string> notVisible, string color, bool cond) {
+        if (hasPlayerUnlockedAchievement(color)) { alreadyUnlocked.Add(color); }
+        else if (cond) { visible.Add(color); }
+        else { notVisible.Add(color); }
     }
 
     private void setAchievementLock(Transform obj, bool cond) {
