@@ -191,7 +191,7 @@ public class Player : MonoBehaviour{
     }
 
     private void walk() {
-        if (isWalking) {
+        if (isWalking && !StaticVariables.pausedFromAchievements) {
             GetComponent<Rigidbody>().position += (walkingDirection * walkingSpeed * Time.deltaTime);
         }
     }
@@ -297,7 +297,7 @@ public class Player : MonoBehaviour{
     }
 
     private void roll() {
-        if (isRolling) {
+        if (isRolling && !StaticVariables.pausedFromAchievements) {
             float timeIntoRoll = rollDuration - actionTimeRemaining;
             float whenDoesSpeedStart = rollStartTime * rollDuration;
             bool rollStartedYet = (timeIntoRoll >= whenDoesSpeedStart);

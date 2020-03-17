@@ -3949,7 +3949,8 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   fonts:
-  - {fileID: 12800000, guid: 373dccdc37e30a14aaeffafd0e03b6dd, type: 3}
+  - {fileID: 12800000, guid: 25163d85800998244a5459953e4c0d5f, type: 3}
+  - {fileID: 12800000, guid: fe37361a98381a6499a8182ca5f7af8b, type: 3}
 --- !u!1 &553238736
 GameObject:
   m_ObjectHideFlags: 0

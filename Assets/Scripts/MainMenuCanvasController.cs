@@ -130,12 +130,20 @@ public class MainMenuCanvasController : MonoBehaviour {
 
     private void hitBackKey() {
         if (Input.GetKeyDown(backKey)) {
-            if (homeCanvas.activeSelf == false) {
-                homeCanvas.SetActive(true);
-                playCanvas.SetActive(false);
-                creditsCanvas.SetActive(false);
-                achievementsCanvas.SetActive(false);
-                showAchievementPlayerModels();
+            if (creditsCanvas.activeSelf) {
+                _btnSettings();
+            }
+            else if (achievementsCanvas.activeSelf) {
+                _btnSettings();
+            }
+            else if (playCanvas.activeSelf) {
+                _btnMainMenu();
+            }
+            else if (settingsCanvas.activeSelf) {
+                _btnMainMenu();
+            }
+            else if (homeCanvas.activeSelf){
+                _btnQuit();
             }
         }
     }
@@ -196,7 +204,7 @@ public class MainMenuCanvasController : MonoBehaviour {
 
 
     private void OnApplicationQuit() {
-        SaveSystem.SaveGame();
+        save();
     }
 
 
@@ -414,6 +422,10 @@ public class MainMenuCanvasController : MonoBehaviour {
             if (hearts == 3) { count++; }
         }
         return count;
+    }
+
+    private void save() {
+        SaveSystem.SaveGame();
     }
 
 }
