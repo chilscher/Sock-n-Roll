@@ -30,5 +30,7 @@ public class StaticVariables {
     static public List<Enemy> enemiesPunched = new List<Enemy>();
     static public List<Enemy> enemiesPunchedSimultaneously = new List<Enemy>();
     static public bool pausedFromAchievements;
+
+    static public float resolutionMultiplier;
     
 }

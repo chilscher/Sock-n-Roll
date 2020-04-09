@@ -59,6 +59,13 @@ public class LevelCanvasController : MonoBehaviour{
     private string achievementsToShow = "";
 
     void Start() {
+
+        ingameCanvas.GetComponent<CanvasScaler>().referenceResolution = new Vector2(900, StaticVariables.resolutionMultiplier);
+        pausedCanvas.GetComponent<CanvasScaler>().referenceResolution = new Vector2(900, StaticVariables.resolutionMultiplier);
+        winCanvas.GetComponent<CanvasScaler>().referenceResolution = new Vector2(900, StaticVariables.resolutionMultiplier);
+        loseCanvas.GetComponent<CanvasScaler>().referenceResolution = new Vector2(900, StaticVariables.resolutionMultiplier);
+        achievementCanvas.GetComponent<CanvasScaler>().referenceResolution = new Vector2(900, StaticVariables.resolutionMultiplier);
+
         player = GameObject.FindWithTag("Player").GetComponent<Player>();
         nextLevelBtn = winCanvas.transform.Find("Next Level Button").gameObject;
         audioManager = FindObjectOfType<AudioManager>();
@@ -67,7 +74,8 @@ public class LevelCanvasController : MonoBehaviour{
         rollButton = ingameCanvas.transform.Find("Roll Button").gameObject;
         pauseButton = ingameCanvas.transform.Find("Pause Button").gameObject;
         levelNumberText = ingameCanvas.transform.Find("Level Number").gameObject;
-        heartsPosition = ingameCanvas.transform.Find("Hearts Position").gameObject;
+        //heartsPosition = ingameCanvas.transform.Find("Hearts Position").gameObject;
+        heartsPosition = ingameCanvas.transform.Find("Level Number").Find("Hearts Position").gameObject;
         flipControls();
         levelNumber = Int32.Parse(SceneManager.GetActiveScene().name.Split(' ')[1]);
         if (levelNumber < 3) { 
@@ -92,10 +100,12 @@ public class LevelCanvasController : MonoBehaviour{
             audioManager.fadeIn("Level Theme");
         }
 
-        ingameCanvas.transform.Find("Hearts Position").gameObject.SetActive(false);
+        //ingameCanvas.transform.Find("Hearts Position").gameObject.SetActive(false);
+        ingameCanvas.transform.Find("Level Number").Find("Hearts Position").gameObject.SetActive(false);
         updatePlayerColor();
         StaticVariables.punchCount = 0;
         StaticVariables.enemiesPunched = new List<Enemy>();
+
     }
 
     
@@ -191,7 +201,7 @@ public class LevelCanvasController : MonoBehaviour{
 
             Vector3 pos = new Vector3(x,y,z);
             GameObject h = Instantiate(heartPrefab);
-            h.transform.SetParent(canvas.transform);
+            h.transform.SetParent(canvas.transform.Find("Level Number"));
             RectTransform rt = h.GetComponent<RectTransform>();
             rt.anchoredPosition = pos;
             h.transform.localScale *= ingameCanvas.transform.localScale.x;

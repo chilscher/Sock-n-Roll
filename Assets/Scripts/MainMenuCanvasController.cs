@@ -74,6 +74,14 @@ public class MainMenuCanvasController : MonoBehaviour {
             showAchievementPlayerModels();
         }
         
+
+        StaticVariables.resolutionMultiplier = 1850 / ((float)Screen.width / (float)Screen.height);
+        homeCanvas.GetComponent<CanvasScaler>().referenceResolution = new Vector2 (900,StaticVariables.resolutionMultiplier);
+        settingsCanvas.GetComponent<CanvasScaler>().referenceResolution = new Vector2(900, StaticVariables.resolutionMultiplier);
+        creditsCanvas.GetComponent<CanvasScaler>().referenceResolution = new Vector2(900, StaticVariables.resolutionMultiplier);
+        playCanvas.GetComponent<CanvasScaler>().referenceResolution = new Vector2(900, StaticVariables.resolutionMultiplier);
+        achievementsCanvas.GetComponent<CanvasScaler>().referenceResolution = new Vector2(900, StaticVariables.resolutionMultiplier);
+
     }
 
     private void Update() {
