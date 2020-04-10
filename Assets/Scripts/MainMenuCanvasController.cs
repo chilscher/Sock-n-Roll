@@ -53,6 +53,7 @@ public class MainMenuCanvasController : MonoBehaviour {
             StaticVariables.isApplicationLaunchingFirstTime = false;
 
             audioManager.applyGlobalVolume();
+            save();
         }
         
         updatePlayerColor();
@@ -168,6 +169,7 @@ public class MainMenuCanvasController : MonoBehaviour {
         AudioListener.volume = StaticVariables.globalAudioScale;
         audioManager.play("Main Menu");
         updateAudioText();
+        save();
     }
 
     public void _btnSettings() {
@@ -183,6 +185,7 @@ public class MainMenuCanvasController : MonoBehaviour {
         StaticVariables.joystickOnRight = !StaticVariables.joystickOnRight;
         updateFlipControlsText();
         flipControls();
+        save();
     }
 
     private void updateFlipControlsText() {
@@ -194,6 +197,7 @@ public class MainMenuCanvasController : MonoBehaviour {
     public void _btnShowControlsOnMenu() {
         StaticVariables.showControlsOnMenu = !StaticVariables.showControlsOnMenu;
         updateShowControlsText();
+        save();
     }
 
     private void updateShowControlsText() {
@@ -222,6 +226,7 @@ public class MainMenuCanvasController : MonoBehaviour {
             StaticVariables.hasChangedColorYet = true;
             updatePlayerColor();
             updateAchievementButtons();
+            save();
         }
     }
 

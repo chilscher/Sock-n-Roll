@@ -151,6 +151,7 @@ public class LevelCanvasController : MonoBehaviour{
         if (achievementsToShow != "") {
             showAchievements();
             achievementsToShow = "";
+            save();
         }
 
     }
@@ -266,6 +267,7 @@ public class LevelCanvasController : MonoBehaviour{
                 StaticVariables.heartsLeftPerLevel[levelNumber - 1] = player.HP;
             }
             checkAchievementsOnWin();
+            save();
         }
     }
 
@@ -354,6 +356,7 @@ public class LevelCanvasController : MonoBehaviour{
                 StaticVariables.secondLastLevelLost = StaticVariables.lastLevelLost;
                 StaticVariables.lastLevelLost = levelNumber;
             }
+            save();
         }
     }
 
@@ -507,5 +510,9 @@ public class LevelCanvasController : MonoBehaviour{
 
     private void addStringToAchievements(string text) {
         StaticVariables.achievementsUnlocked += ("-" + text);
+    }
+
+    private void save() {
+        SaveSystem.SaveGame();
     }
 }
