@@ -132,6 +132,7 @@ public class MainMenuCanvasController : MonoBehaviour {
 
     public void _btnLoadLevel(int x) {
         if (StaticVariables.levelsBeaten + 1 >= x) {
+        //if (true) { 
             audioManager.fadeOutAll();
             SceneManager.LoadScene("Level " + x);
         }
@@ -414,6 +415,7 @@ public class MainMenuCanvasController : MonoBehaviour {
     private bool hasPlayerUnlockedAchievement(string color) {
         string requirement = achievementsCanvas.transform.Find("Color " + color).Find("Requirement").GetComponent<Text>().text;
         foreach (string unlock in StaticVariables.achievementsUnlocked.Split('-')) {
+            //print(unlock);
             if (unlock == requirement) { return true; }
         }
         return false;

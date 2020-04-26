@@ -8502,7 +8502,9 @@ PrefabInstance:
     - target: {fileID: 4627889986561250465, guid: 986d686b409ecaa44b423005407ea360,
         type: 3}
       propertyPath: m_Text
-      value: DEFEAT ALL ENEMIES IN LEVEL 24 WITH PUNCHES
+      value: 'DEFEAT ALL ENEMIES IN
+
+        LEVEL 24 WITH PUNCHES'
       objectReference: {fileID: 0}
     - target: {fileID: 4627889986561250465, guid: 986d686b409ecaa44b423005407ea360,
         type: 3}
@@ -8527,7 +8529,9 @@ PrefabInstance:
     - target: {fileID: 6422587352310179046, guid: 986d686b409ecaa44b423005407ea360,
         type: 3}
       propertyPath: m_Text
-      value: DEFEAT ALL ENEMIES IN LEVEL 24 WITH PUNCHES
+      value: 'DEFEAT ALL ENEMIES IN
+
+        LEVEL 24 WITH PUNCHES'
       objectReference: {fileID: 0}
     - target: {fileID: 6422587352310179046, guid: 986d686b409ecaa44b423005407ea360,
         type: 3}
