@@ -1,17 +1,25 @@
-﻿using System.Collections;
+﻿//for Sock 'n Roll, copyright Cole Hilscher 2020
+
+using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
 
 
 [System.Serializable]
 public class SaveData {
+    //handles the player's save data
 
+    //settings
     public float globalAudioScale;
     public bool joystickOnRight;
+    public bool showControlsOnMenu;
+
+    //game progress
     public int levelsBeaten;
     public bool hasChangedColorYet;
+
+    //variables used in calculating achievements and available skins
     public string playerMaterial;
-    public bool showControlsOnMenu;
     public bool hasBeenOutOfBounds;
     public int[] heartsLeftPerLevel;
     public string achievementsUnlocked;
@@ -19,6 +27,7 @@ public class SaveData {
     public int secondLastLevelLost;
 
     public SaveData() {
+        //takes all of the necessary variables from StaticVariables and stores them into the SaveData object variables
         globalAudioScale = StaticVariables.globalAudioScale;
         joystickOnRight = StaticVariables.joystickOnRight;
         levelsBeaten = StaticVariables.levelsBeaten;
@@ -33,6 +42,7 @@ public class SaveData {
     }
 
     public void LoadData() {
+        //takes all of the variables stored in the SaveData object and stores them into StaticVariables
         StaticVariables.globalAudioScale = globalAudioScale;
         StaticVariables.joystickOnRight = joystickOnRight;
         StaticVariables.levelsBeaten = levelsBeaten;
@@ -49,9 +59,5 @@ public class SaveData {
                 StaticVariables.playerMat = mat;
             }
         }
-
-        
     }
-
-
 }

@@ -1,9 +1,13 @@
-﻿using System.Collections;
+﻿//for Sock 'n Roll, copyright Cole Hilscher 2020
+
+using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
 
 public class Player : MonoBehaviour{
-    
+    //controls the behavior of the Player. Attached to the player prefab
+
+    //keyboard keys for playing the game, used for testing
     [Header("Input Keys")]
     public KeyCode upKey = KeyCode.UpArrow;
     public KeyCode leftKey = KeyCode.LeftArrow;
@@ -33,15 +37,14 @@ public class Player : MonoBehaviour{
 
     [Header("Health Information")]
     public int startingHP = 3;
-    public bool onMenu = false;
 
-    [Header("Tutorials and Menus")]
+    [Header("Tutorials")]
     public bool canRoll = true;
     public bool canTakeDamage = true;
 
 
-    private Vector3 walkingDirection;
-    private Animator animator;
+
+    //the player's current state
     private bool isWalking = false;
     private bool isPunching = false;
     private bool isRolling = false;
@@ -50,70 +53,117 @@ public class Player : MonoBehaviour{
     private bool hasWon = false;
     private bool hasLost = false;
     private bool isDead = false;
-    private bool isReviving = false;
     private float actionTimeRemaining = 0f;
+
+    //animation variables
+    private Animator animator;
     private float idleDuration;
     private float walkDuration;
     private float punchDuration;
     private float rollDuration;
     private float deathDuration;
-    [HideInInspector]
-    public int HP;
-    private List<Enemy> enemiesInRange = new List<Enemy>();
+
+    //if the audio clip for some actions has happened yet, used during the animation process
     private bool hasPunchSounded = false;
     private bool hasRollSounded = false;
-    private AudioManager audioManager;
 
+    [HideInInspector]
+    public int HP;
+    private List<Enemy> enemiesInRange = new List<Enemy>();//the enemies that are close enough to be punched
+    private AudioManager audioManager;
     private GameObject ground;
+    private Vector3 walkingDirection;
 
 
 
     void Start() {
+        //set starting variables
         if (ground == null) {
             ground = GameObject.Find("Ground");
         }
         audioManager = FindObjectOfType<AudioManager>();
         HP = startingHP;
         animator = GetComponent<Animator>();
+
+        //calculate and set times used for the animator and also for the player's internal calculations
         setAnimationSpeeds();
         getAnimationTimes();
     }
 
     
     void Update(){
-
+        //determine the player's action
         setAction();
 
+        //if the player is punching, do that stuff
         animatePunch();
         punchSound();
         hitEnemy();
 
+        //if the player is rolling, do that stuff
         animateRoll();
         rollSound();
         roll();
 
+        //if the player is walking, do that stuff
         setWalkingDirection();
         rotateToWalkingDirection();
         animateWalk();
         walk();
 
+        //see if the player should win or lose the level
         checkForWin();
         die();
-        revive();
 
+        //count down the time remaining until the player can make their next action
         countDownActionTime();
 
+        //checks if the player is out of bounds, specifically to prompt the out-of-bounds achievement
         checkIfOutOfBounds();
 
     }
 
-    private void countDownActionTime() {
-        float a = actionTimeRemaining;
-        actionTimeRemaining -= Time.deltaTime;
-        if (actionTimeRemaining < 0) {
-            actionTimeRemaining = 0f;
-        }        
+    // ---------------------------------------------------
+    //SETUP FUNCTIONS
+    // ---------------------------------------------------
+
+    private void getAnimationTimes() {
+        //calculates the duration of several animations depending on the animation clip length and the speed scalar set in the inspector
+        AnimationClip[] clips = animator.runtimeAnimatorController.animationClips;
+        foreach (AnimationClip clip in clips) {
+            switch (clip.name) {
+                case "Idle":
+                    idleDuration = clip.length / idleSpeed;
+                    break;
+                case "Walk":
+                    walkDuration = clip.length / walkSpeed;
+                    break;
+                case "Roll":
+                    rollDuration = clip.length / rollSpeed;
+                    break;
+                case "Punch":
+                    punchDuration = clip.length / punchSpeed;
+                    break;
+                case "Death":
+                    deathDuration = clip.length / deathSpeed;
+                    break;
+            }
+        }
     }
+
+    private void setAnimationSpeeds() {
+        //sets the player animation speeds in the animator
+        animator.SetFloat("idleSpeed", idleSpeed);
+        animator.SetFloat("walkSpeed", walkSpeed);
+        animator.SetFloat("punchSpeed", punchSpeed);
+        animator.SetFloat("rollSpeed", rollSpeed);
+        animator.SetFloat("deathSpeed", deathSpeed);
+    }
+
+
+    // ---------------------------------------------------
+    //FUNCTIONS THAT PROCESS PLAYER INPUT AND DETERMINE WHAT YOU ARE DOING WHEN
+    // ---------------------------------------------------
 
     private void setAction() {
         //determines which action the player is taking. Either walking, rolling, or punching
@@ -160,9 +210,22 @@ public class Player : MonoBehaviour{
             }
         }
     }
+    
+    private void countDownActionTime() {
+        //count down the time remaining until the player can make their next action
+        float a = actionTimeRemaining;
+        actionTimeRemaining -= Time.deltaTime;
+        if (actionTimeRemaining < 0) {
+            actionTimeRemaining = 0f;
+        }        
+    }
 
-
+    // ---------------------------------------------------
+    //FUNCTIONS THAT HANDLE WALKING
+    // ---------------------------------------------------
+    
     private void setWalkingDirection() {
+        //uses the keyboard inputs and the joystick to determine the player's walking direction.
         if (isWalking) {
             Vector3 upDir = new Vector3(-1, 0, 0);
             Vector3 downDir = -upDir;
@@ -182,6 +245,8 @@ public class Player : MonoBehaviour{
     }
 
     private void rotateToWalkingDirection() {
+        //rotates the player towards their walking direction.
+        //rotation happens immediately
         if (isWalking) {
             if (walkingDirection != (new Vector3(0, 0, 0))) {
                 Quaternion rotation = Quaternion.LookRotation(walkingDirection);
@@ -191,15 +256,21 @@ public class Player : MonoBehaviour{
     }
 
     private void walk() {
+        //move the player in the direction of their walking speed
         if (isWalking && !StaticVariables.pausedFromAchievements) {
             GetComponent<Rigidbody>().position += (walkingDirection * walkingSpeed * Time.deltaTime);
         }
     }
 
     private void animateWalk() {
+        //if the player is walking, set the bool trigger that starts the walking animation
         if (isWalking && walkingDirection != Vector3.zero) {animator.SetBool("walking", true);}
         else {animator.SetBool("walking", false);}
     }
+
+    // ---------------------------------------------------
+    //FUNCTIONS THAT HANDLE PUNCHING
+    // ---------------------------------------------------
     
     private void hitEnemy() {
         //if the player is punching and it is the right time in the punching animation, and an enemy is in front of them, hit the enemy
@@ -231,6 +302,7 @@ public class Player : MonoBehaviour{
     }
 
     private void punchSound() {
+        //if the appropriate amount of time into a punch has passed, play the punching sound
         if (isPunching) {
             float timeIntoPunch = punchDuration - actionTimeRemaining;
             float whenDoesPunchSoundStart = punchSoundTime * punchDuration;
@@ -239,11 +311,31 @@ public class Player : MonoBehaviour{
                 audioManager.play("Punch");
                 hasPunchSounded = true;
             }
-
         }
     }
 
+    private void animatePunch() {
+        //if the player is punching, set the bool trigger that starts the punching animation
+        if (isPunching) { animator.SetBool("punching", true); }
+        else { animator.SetBool("punching", false); }
+    }
+
+    private void OnTriggerEnter(Collider col) {
+        //when the player's collider hits an enemy's collider, add them to the list of enemies that will get hit by a punch
+        if (col.gameObject.tag == "Enemy") { enemiesInRange.Add(col.GetComponent<Enemy>()); }
+    }
+
+    private void OnTriggerExit(Collider col) {
+        //when the player's collider exits an enemy's collider, remove the enemy from the list of enemies that will get hit by a punch
+        if (col.gameObject.tag == "Enemy") { enemiesInRange.Remove(col.GetComponent<Enemy>()); }
+    }
+
+    // ---------------------------------------------------
+    //FUNCTIONS THAT HANDLE ROLLING
+    // ---------------------------------------------------
+    
     private void rollSound() {
+        //in the appropriate amount of time into a roll has passed, play the rolling sound
         if (isRolling) {
             float timeIntoRoll = rollDuration - actionTimeRemaining;
             float whenDoesRollSoundStart = rollSoundTime * rollDuration;
@@ -255,66 +347,30 @@ public class Player : MonoBehaviour{
         }
     }
     
-    private void animatePunch() {
-        if (isPunching) { animator.SetBool("punching", true); }
-        else { animator.SetBool("punching", false);}
-    }
-
     private void animateRoll() {
+        //if the player is rolling, set the bool trigger that starts the rolling animation
         if (isRolling) { animator.SetBool("rolling", true); }
         else { animator.SetBool("rolling", false);}
     }
-
-    private void getAnimationTimes() {
-        AnimationClip[] clips = animator.runtimeAnimatorController.animationClips;
-        foreach(AnimationClip clip in clips) {
-            switch (clip.name) {
-                case "Idle":
-                    idleDuration = clip.length / idleSpeed;
-                    break;
-                case "Walk":
-                    walkDuration = clip.length / walkSpeed;
-                    break;
-                case "Roll":
-                    rollDuration = clip.length / rollSpeed;
-                    break;
-                case "Punch":
-                    punchDuration = clip.length / punchSpeed;
-                    break;
-                case "Death":
-                    deathDuration = clip.length / deathSpeed;
-                    break;
-            }
-        }
-    }
-
-    private void setAnimationSpeeds() {
-        animator.SetFloat("idleSpeed", idleSpeed);
-        animator.SetFloat("walkSpeed", walkSpeed);
-        animator.SetFloat("punchSpeed", punchSpeed);
-        animator.SetFloat("rollSpeed", rollSpeed);
-        animator.SetFloat("deathSpeed", deathSpeed);
-    }
-
+    
     private void roll() {
+        //when the player pushes the roll button, they begin the rolling process, but the animation and the speed-up from the roll don't start immediately
+        //this handles that process
         if (isRolling && !StaticVariables.pausedFromAchievements) {
             float timeIntoRoll = rollDuration - actionTimeRemaining;
             float whenDoesSpeedStart = rollStartTime * rollDuration;
             bool rollStartedYet = (timeIntoRoll >= whenDoesSpeedStart);
-            if (rollStartedYet) { GetComponent<Rigidbody>().position += (transform.forward * rollingSpeed * Time.deltaTime);}
-            else { GetComponent<Rigidbody>().position += (transform.forward * walkingSpeed* Time.deltaTime);}
+            if (rollStartedYet) { GetComponent<Rigidbody>().position += (transform.forward * rollingSpeed * Time.deltaTime);} //once the roll starts, the player moves faster
+            else { GetComponent<Rigidbody>().position += (transform.forward * walkingSpeed* Time.deltaTime);} //until then, they still move at their normal walking speed
         }
     }
 
-    private void OnTriggerEnter(Collider col) {
-        if (col.gameObject.tag == "Enemy") { enemiesInRange.Add(col.GetComponent<Enemy>()); }
-    }
-
-    private void OnTriggerExit(Collider col) {
-        if (col.gameObject.tag == "Enemy") { enemiesInRange.Remove(col.GetComponent<Enemy>()); }
-    }
-
+    // ---------------------------------------------------
+    //FUNCTIONS THAT HANDLE GETTING HIT, WINNING, AND LOSING
+    // ---------------------------------------------------
+    
     public void hasBeenHit() {
+        //when the player gets hit by a bullet, they will take some damage, and then will die if they lost all their hp
         if (!isDead) {
             if (HP > 0) {
                 if (canTakeDamage) { HP -= 1; }
@@ -336,21 +392,15 @@ public class Player : MonoBehaviour{
     }
 
     private void die() {
+        //the player dies, at the end of the "dying" animation process
         if (isDying && actionTimeRemaining == 0) {
             isDying = false;
             isDead = true;
-            if (!onMenu) { lose(); }
-        }
-    }
-
-    private void revive() {
-        if (isReviving && actionTimeRemaining == 0) {
-            isReviving = false;
-            animator.SetTrigger("respawned");
         }
     }
 
     private void checkForWin() {
+        //sees if the player has defeated all enemies. If they have, they win!
         if (!hasWon && !hasLost) { 
             GameObject[] enemiesLeft = GameObject.FindGameObjectsWithTag("Enemy");
             if (enemiesLeft.Length == 0) {
@@ -367,9 +417,10 @@ public class Player : MonoBehaviour{
         }
     }
 
-    private void win() { hasWon = true; }
+    private void win() { hasWon = true; } //set the winning boolean, used by the levelCanvasController
 
     private void lose() {
+        //once the player dies, sets all of the appropriate variables. haslost is read by the levelCanvasController to start the lose-screen-popup process
         hasLost = true;
         isWalking = false;
         isPunching = false;
@@ -377,29 +428,20 @@ public class Player : MonoBehaviour{
         isDying = false;
     }
 
+    // ---------------------------------------------------
+    //FUNCTIONS THAT GET DATA FOR OTHER SCRIPTS TO USE
+    // ---------------------------------------------------
+
     public bool hasWonYet() { return hasWon; }
 
     public bool hasLostYet() {return hasLost;}
 
-    public void startReviving() {
-        if (isDead) {
-            HP = startingHP;
-            animator.SetTrigger("respawning");
-            isWalking = false;
-            isRolling = false;
-            isPunching = false;
-            isDying = false;
-            isReviving = true;
-            isDead = false;
-            actionTimeRemaining = deathDuration;
-        }
-    }
-
     public int getHP() {return HP;}
 
     public bool getIsDead() { return isDead; }
-
+    
     private void checkIfOutOfBounds() {
+        //checks if the player is out of bounds, specifically for the out-of-bounds achievement popup. StaticVariables.isOutOfBounds is read in levelCanvasController
         if ((transform.position.z < -6f) || (transform.position.z > 5.9f) || (transform.position.x < -72.7f) || (transform.position.x > -61.1f))  {
             StaticVariables.isOutOfBounds = true;
         }
